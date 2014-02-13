@@ -9,7 +9,7 @@ from functools import wraps
 import inspect
 import sys
 
-MAKE_NOISE = False
+MAKE_NOISE = True
 
 def external(f):
     """ Decorator that looks for an external version of
@@ -39,9 +39,8 @@ def external(f):
         MAKE_NOISE and print("Error importing module (%s)" % (
             module_name,), file=sys.stderr)
         return f
-    finally:
-        MAKE_NOISE and print("Using ext module: %s" % (
-            module_name,), file=sys.stderr)
+    MAKE_NOISE and print("Using ext module: %s" % (
+        module_name,), file=sys.stderr)
     
     # Get the external function with a name that
     # matches that of the decoratee.
