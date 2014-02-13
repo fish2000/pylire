@@ -36,6 +36,7 @@ setup(
     maintainer_email='fish2000@gmail.com',
     license='GPLv2',
     url='http://github.com/fish2000/pylire/',
+    zip_safe=False,
     
     #setup_requires=['cython'],
     install_requires=[
