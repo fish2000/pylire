@@ -9,7 +9,7 @@ from functools import wraps
 import inspect
 import sys
 
-MAKE_NOISE = True
+MAKE_NOISE = False
 
 def external(f):
     """ Decorator that looks for an external version of

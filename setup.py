@@ -43,7 +43,7 @@ setup(
         'numpy',
         'numexpr',
         'imread',
-        'skimage'],
+        'scikit-image'],
     
     packages=[
         'pylire',

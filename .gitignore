@@ -19,3 +19,4 @@ stdout
 build/
 dist/
 sdist/
+pylire.egg-info/
