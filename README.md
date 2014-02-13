@@ -1,0 +1,1 @@
+Python ports of Lire image-analysis algorithms. http://github.com/fish2000/pylire
