@@ -1,6 +1,0 @@
-exclude *.pyc *~ .DS_Store
-include .gitignore
-include README.md
-recursive-include bin *
-recursive-include pylire/compatibility/libs *
-recursive-include pylire/process/bits *

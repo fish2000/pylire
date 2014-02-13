@@ -11,6 +11,7 @@ stdout
 *.dmg
 .DS_Store
 .password
+MANIFEST.in
 
 *.aof
 *.rdb
