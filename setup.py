@@ -56,6 +56,10 @@ setup(
         ],
     },
     
+    scripts={
+        'bin/jython-pylire': 'jython-pylire',
+    },
+    
     ext_modules=[
         cython_ext("grayscale"),
         cython_ext("opponent_histogram")],
