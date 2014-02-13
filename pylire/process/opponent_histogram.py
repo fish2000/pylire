@@ -100,7 +100,6 @@ def main():
     
     '''@test
     def timetest_scalar(R, G, B):
-        #(R, G, B) = (channel.T.astype('float32') for channel in ndim.T)
         histogram_keys = opponent_histogram_scalar_keys(R, G, B)
         return histogram_normalize(
             histogram_count(
@@ -116,7 +115,6 @@ def main():
     
     @test
     def timetest_vector(R, G, B):
-        #(R, G, B) = (channel.T.astype('float32') for channel in ndim.T)
         histogram_key_vec = opponent_histogram_key_vector_ORIG(R, G, B)
         return histogram_normalize(
             histogram_count(
@@ -132,7 +130,6 @@ def main():
     
     @test
     def timetest_vector(R, G, B):
-        #(R, G, B) = (channel.T.astype('float32') for channel in ndim.T)
         histogram_key_vec_inline = opponent_histogram_key_vector(R, G, B)
         return histogram_normalize(
             histogram_count(

@@ -5,7 +5,6 @@ from pkgutil import extend_path
 __path__ = extend_path(__path__, __name__)
 
 from importlib import import_module
-#from os.path import splitext, basename
 from functools import wraps
 import inspect
 import sys
