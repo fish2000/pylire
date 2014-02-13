@@ -13,7 +13,7 @@ def cython_module(*args):
     return Extension(ext_package, [ext_pth])
 
 def cython_ext(name):
-    return cython_module('process', 'ext', name)
+    return cython_module('pylire', 'process', 'ext', name)
 
 from Cython.Distutils import build_ext
 from distutils.sysconfig import get_python_inc
@@ -36,45 +36,43 @@ setup(
     maintainer_email='fish2000@gmail.com',
     license='GPLv2',
     url='http://github.com/fish2000/pylire/',
-
+    
     #setup_requires=['cython'],
     install_requires=[
-        'numpy', 'numexpr', 'imread', 'scipy', 'skimage',
-        'decorator'],
+        'numpy',
+        'numexpr',
+        'imread',
+        'scipy',
+        'skimage'],
     
     packages=[
         'pylire',
         'pylire.process',
         'pylire.process.ext',
-        'pylire.test'],
+        'pylire.compatibility'],
     
     package_data={
         'pylire': [
-            'process/bits/*.pickle',
+            'process/bits/*.h5',
         ],
     },
     
     ext_modules=[
         cython_ext("grayscale"),
-        cython_ext("opponent_histogram"),
-    ],
+        cython_ext("opponent_histogram")],
     
     cmdclass=dict(build_ext=build_ext),
     include_dirs=[
         numpy.get_include(),
         get_python_inc(plat_specific=1),
-        ".",
-    ],
+        "."],
     
     classifiers=[
         'Development Status :: 4 - Beta',
-        'Environment :: Web Environment',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Framework :: Django',
-        'Topic :: Utilities'
-    ]
+        'Topic :: Utilities']
 )
 
