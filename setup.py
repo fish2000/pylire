@@ -46,9 +46,10 @@ setup(
     
     packages=[
         'pylire',
+        'pylire.compatibility',
         'pylire.process',
         'pylire.process.ext',
-        'pylire.compatibility'],
+    ],
     
     package_data={
         'pylire': [
