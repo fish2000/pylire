@@ -91,7 +91,7 @@ def oh_base64(histogram):
         )).replace('\n', '')
 
 def main():
-    from pylire.test.utils import test
+    from pylire.compatibility.utils import test
     
     #pth = expanduser('~/Downloads/5717314638_2340739e06_b.jpg')
     pth = expanduser('~/Downloads/8411181216_b16bf74632_o.jpg')
