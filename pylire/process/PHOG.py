@@ -2,7 +2,7 @@
 from __future__ import division
 
 import numpy
-from scipy import ndimage
+from imread import imread
 from os.path import expanduser
 
 from pylire.process.grayscale import ITU_R_601_2
@@ -35,7 +35,7 @@ def PHOG(original):
 
 if __name__ == '__main__':
     pth = expanduser('~/Downloads/5717314638_2340739e06_b.jpg')
-    ndim = ndimage.imread(pth)
+    ndim = imread(pth)
     (R, G, B) = (channel.T for channel in ndim.T)
     
     print histogram

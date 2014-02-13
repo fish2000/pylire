@@ -42,7 +42,6 @@ setup(
         'numpy',
         'numexpr',
         'imread',
-        'scipy',
         'skimage'],
     
     packages=[

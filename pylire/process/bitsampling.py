@@ -5,8 +5,7 @@ import h5py
 import numpy
 
 from pylire.compatibility.utils import test
-from os.path import join
-from os import getenv
+from os.path import join, dirname
 
 # Best values for PHOG: 3000 results include > 80% true positives
 # after re-ranking in the 1str 20 results
@@ -31,10 +30,7 @@ BIT_HASH_LUT = numpy.exp2(
     numpy.arange(32, dtype='double'))
 
 BIT_BUCKET = join(
-    getenv(
-        'VIRTUAL_ENV',
-        "/Users/fish/Praxa/TESSAR"),
-    'instance', 'pylire', 'process', 'bits')
+    dirname(__file__), 'bits')
 
 BIT_STORE = h5py.File(
     join(BIT_BUCKET,

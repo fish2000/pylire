@@ -5,7 +5,7 @@ import math
 import numpy
 import struct
 import base64
-from scipy import ndimage
+from imread import imread
 from os.path import expanduser
 
 from pylire.process import external
@@ -95,7 +95,7 @@ def main():
     
     #pth = expanduser('~/Downloads/5717314638_2340739e06_b.jpg')
     pth = expanduser('~/Downloads/8411181216_b16bf74632_o.jpg')
-    ndim = ndimage.imread(pth)
+    ndim = imread(pth)
     (R, G, B) = (channel.T.astype('float32') for channel in ndim.T)
     
     '''@test
