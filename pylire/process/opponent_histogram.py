@@ -66,7 +66,7 @@ def histogram_normalize(histogram, scale=127.0):
 
 def opponent_histogram(ndim):
     if len(ndim.shape) == 3:
-        (R, G, B) = (channel.T.astype('float32') for channel in ndim.T[:2])
+        (R, G, B) = (channel.T.astype('float32') for channel in ndim.T[:3])
     elif len(ndim.shape) == 2:
         R = G = B = ndim.astype('float32')
     else:
