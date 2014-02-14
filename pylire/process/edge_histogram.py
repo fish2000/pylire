@@ -41,7 +41,6 @@ def edge_histogram(R, G, B):
     edge_feature = 0
     count_local = numpy.zeros(16, dtype="int")
     
-    #block_size = (int(math.floor(int(math.sqrt(float(W * H) / float(NUM_BLOCK)) / 2.0))) * 2) or 2
     block_a = math.sqrt((W * H) / float(NUM_BLOCK))
     block_size = int(math.floor((block_a / 2.0)) * 2)
     if block_size == 0:
@@ -50,11 +49,6 @@ def edge_histogram(R, G, B):
     block_shift = block_size >> 1
     bs2 = float(block_size) * float(block_size)
     four_over = 4.0 / bs2
-    
-    print("block_size: %s" % block_size)
-    print("block_shift: %s" % block_shift)
-    print("bs2: %s" % bs2)
-    print("four_over: %s" % four_over)
     
     for j in xrange(0, H - block_size, block_size):
         for i in xrange(0, W - block_size, block_size):
@@ -115,11 +109,8 @@ def edge_histogram(R, G, B):
             elif edge_feature == NON_DIRECTIONAL_EDGE:
                 local_histo[sub_local_index * 5 + 4] += 1
     
-    print(count_local)
     for k in xrange(len(local_histo)):
-        local_histo[k] = local_histo[k] / count_local[int(k / 5)]
-    
-    print(local_histo)
+        local_histo[k] /= count_local[int(k / 5)]
     
     histogram = numpy.zeros(80, dtype="int")
     for i in xrange(len(local_histo)):
@@ -152,7 +143,7 @@ def main():
     
     edge_histo = timetest_naive_edge_histogram(R, G, B)
     
-    print("native vector func (with inlines):")
+    print("naive Lire port (string rep):")
     print("%s" % edge_histo_str(edge_histo))
     # print("binary hash:")
     # print(oh_bithash_str(hhi))
