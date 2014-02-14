@@ -65,10 +65,13 @@ def histogram_normalize(histogram, scale=127.0):
     ).astype('uint8')
 
 def opponent_histogram(ndim):
-    if len(ndim.shape) == 3:
-        (R, G, B) = (channel.T.astype('float32') for channel in ndim.T[:3])
-    elif len(ndim.shape) == 2:
+    if len(ndim.shape) == 2:
         R = G = B = ndim.astype('float32')
+    elif len(ndim.shape) == 3:
+        if ndim.shape[2] > 2:
+            (R, G, B) = (channel.T.astype('float32') for channel in ndim.T[:3])
+        else:
+            R = G = B = ndim.T[0].T.astype('float32')
     else:
         raise ValueError(
             "Can't create opponent histogram from an image array with shape = %s" % str(
