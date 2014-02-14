@@ -5,8 +5,6 @@ import math
 import numpy
 import struct
 import base64
-from imread import imread
-from os.path import expanduser
 
 from pylire.process import external
 from pylire.process.bitsampling import histogram_hash, histogram_hash_string
@@ -64,18 +62,7 @@ def histogram_normalize(histogram, scale=127.0):
         (histogram.astype('float32') / (numpy.max(histogram)).astype('float32')) * float(scale)
     ).astype('uint8')
 
-def opponent_histogram(ndim):
-    if len(ndim.shape) == 2:
-        R = G = B = ndim.astype('float32')
-    elif len(ndim.shape) == 3:
-        if ndim.shape[2] > 2:
-            (R, G, B) = (channel.T.astype('float32') for channel in ndim.T[:3])
-        else:
-            R = G = B = ndim.T[0].T.astype('float32')
-    else:
-        raise ValueError(
-            "Can't create opponent histogram from an image array with shape = %s" % str(
-                ndim.shape))
+def opponent_histogram(R, G, B):
     histogram_keys = opponent_histogram_key_vector(R, G, B)
     return histogram_normalize(
         histogram_count(
@@ -102,11 +89,13 @@ def oh_base64(histogram):
 
 def main():
     from pylire.compatibility.utils import test
+    from pylire.process.channels import RGB
+    from os.path import expanduser
+    from imread import imread
     
     #pth = expanduser('~/Downloads/5717314638_2340739e06_b.jpg')
     pth = expanduser('~/Downloads/8411181216_b16bf74632_o.jpg')
-    ndim = imread(pth)
-    (R, G, B) = (channel.T.astype('float32') for channel in ndim.T)
+    (R, G, B) = RGB(imread(pth))
     
     '''@test
     def timetest_scalar(R, G, B):
