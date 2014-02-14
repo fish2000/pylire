@@ -3,12 +3,14 @@ from __future__ import division, print_function
 
 import numpy
 import math
+import struct
+import base64
 
 from pylire.process.grayscale import YValue
-from pylire.process.bitsampling import histogram_hash_string
+from pylire.process.bitsampling import histogram_hash, histogram_hash_string
 
-THRESHOLD = 11
-NUM_BLOCK = 1100
+THRESHOLD = 11.0
+NUM_BLOCK = 1100.0
 ROOT_2 = math.sqrt(2.0)
 
 NO_EDGE = 0
@@ -27,28 +29,22 @@ QUANT_TABLE = numpy.array([
 ], dtype="double")
 
 EDGE_FILTER = numpy.array([
-    [1.0, -1.0, 1.0, -1.0],
-    [1.0, 1.0, -1.0, -1.0],
-    [ROOT_2, 0.0, 0.0, -ROOT_2],
-    [0.0, ROOT_2, -ROOT_2, 0.0],
-    [2.0, -2.0, -2.0, 2.0],
-], dtype="double")
+    [1.0,    -1.0,     1.0,   -1.0],
+    [1.0,     1.0,    -1.0,   -1.0],
+    [ROOT_2,  0.0,     0.0,   -ROOT_2],
+    [0.0,     ROOT_2, -ROOT_2, 0.0],
+    [2.0,    -2.0,    -2.0,    2.0]],
+dtype="double")
 
 def edge_histogram(R, G, B):
     grayscale = YValue(R, G, B)
     (W, H) = grayscale.shape[:2]
     local_histo = numpy.zeros(80, dtype="double")
     sub_local_index = 0
-    edge_feature = 0
     count_local = numpy.zeros(16, dtype="int")
-    
-    block_a = math.sqrt((W * H) / float(NUM_BLOCK))
-    block_size = int(math.floor((block_a / 2.0)) * 2)
-    if block_size == 0:
-        block_size = 2
-    
+    block_size = int(math.floor((math.sqrt((W * H) / NUM_BLOCK) / 2.0)) * 2) or 2
     block_shift = block_size >> 1
-    bs2 = float(block_size) * float(block_size)
+    bs2 = float(block_size)**2
     four_over = 4.0 / bs2
     
     for j in xrange(0, H - block_size, block_size):
@@ -56,7 +52,7 @@ def edge_histogram(R, G, B):
             sub_local_index = int((i << 2) / W) + (int((j << 2) / H) << 2)
             count_local[sub_local_index] += 1
             
-            averages = numpy.array([
+            averages = [
                 four_over * numpy.sum(
                     grayscale[i:(block_shift-1)+i, j:(block_shift-1)+j],
                     dtype="double"),
@@ -68,35 +64,35 @@ def edge_histogram(R, G, B):
                     dtype="double"),
                 four_over * numpy.sum(
                     grayscale[block_shift+i:(block_size-1)+i, block_shift+j:(block_size-1)+j],
-                    dtype="double")],
-                dtype="double")
-            threshold = float(THRESHOLD)
-            strengths = numpy.zeros(5, dtype="double")
+                    dtype="double")]
+            strengths = [0.0, 0.0, 0.0, 0.0, 0.0]
             
             for e in xrange(5):
                 for k in xrange(4):
                     strengths[e] += averages[k] * EDGE_FILTER[e, k]
                 strengths[e] = abs(strengths[e])
             
+            # incrementally test through strengths,
+            # determining which type of feature we have
             eMAX = strengths[0]
-            eIDX = VERTICAL_EDGE
+            edge_feature = VERTICAL_EDGE
             if strengths[1] > eMAX:
                 eMAX = strengths[1]
-                eIDX = HORIZONTAL_EDGE
+                edge_feature = HORIZONTAL_EDGE
             if strengths[2] > eMAX:
                 eMAX = strengths[2]
-                eIDX = DIAGONAL_45_DEGREE_EDGE
+                edge_feature = DIAGONAL_45_DEGREE_EDGE
             if strengths[3] > eMAX:
                 eMAX = strengths[3]
-                eIDX = DIAGONAL_135_DEGREE_EDGE
+                edge_feature = DIAGONAL_135_DEGREE_EDGE
             if strengths[4] > eMAX:
                 eMAX = strengths[4]
-                eIDX = NON_DIRECTIONAL_EDGE
-            if eMAX < threshold:
-                eIDX = NO_EDGE
+                edge_feature = NON_DIRECTIONAL_EDGE
+            if eMAX < THRESHOLD:
+                edge_feature = NO_EDGE
             
-            edge_feature = eIDX
-            
+            # now that we have the feature,
+            # use it to properly increment the histogram
             if edge_feature == NO_EDGE:
                 pass
             elif edge_feature == VERTICAL_EDGE:
@@ -117,9 +113,9 @@ def edge_histogram(R, G, B):
     for i in xrange(len(local_histo)):
         for j in xrange(8):
             histogram[i] = j
-            quantval = 1.0
-            if j < 7:
-                quantval = (QUANT_TABLE[i % 5][j] + QUANT_TABLE[i % 5][j + 1]) / 2.0
+            quantval = (j < 7) \
+                and (QUANT_TABLE[i % 5][j] + QUANT_TABLE[i % 5][j + 1]) / 2.0 \
+                or 1.0
             if local_histo[i] <= quantval:
                 break
     return histogram
@@ -127,9 +123,29 @@ def edge_histogram(R, G, B):
 def edge_histo_str(histogram):
     return "edgehistogram;%s" % " ".join(histogram.astype('str'))
 
+def edge_histo_bithash(histogram):
+    return histogram_hash(
+        histogram.astype('double'))
+
 def edge_histo_bithash_str(histogram):
     return histogram_hash_string(
         histogram.astype('double'))
+
+def edge_histo_bytes(histogram):
+    histobytes = numpy.zeros(
+        int(histogram.shape[0] / 2),
+        dtype='byte')
+    for i in xrange(int(len(histogram) / 2)):
+        histobytes[i] = ((
+            histogram[i << 1].astype('int') << 4 | \
+            histogram[(i << 1) + 1].astype('int')) - 128)
+    return histobytes
+
+def edge_histo_base64(histobytes):
+    return base64.encodestring(
+        "".join(
+            [struct.pack('b', byte) for byte in histobytes]
+        )).replace('\n', '')
 
 
 def main():
@@ -150,8 +166,12 @@ def main():
     
     print("naive Lire port (string rep):")
     print("%s" % edge_histo_str(edge_histo))
+    print("")
     print("binary hash:")
     print(edge_histo_bithash_str(edge_histo))
+    print("")
+    print("base64-encoded byte rep:")
+    print(edge_histo_base64(edge_histo_bytes(edge_histo)))
     print("")
     
 if __name__ == '__main__':

@@ -2,6 +2,7 @@
 from __future__ import division
 
 def RGB(ndim):
+    """ Split an RGB/RGBA/L-mode image into R, G, and B channel arrays """
     if len(ndim.shape) == 2:
         R = G = B = ndim.astype('float32')
     elif len(ndim.shape) == 3:
