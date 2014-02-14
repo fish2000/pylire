@@ -216,8 +216,12 @@ done
 # ADD LIRE JARS
 BIN_DIR="${PWD##*/}"
 LIRESOLR_LIBS_DIR="${BIN_DIR}/../pylire/compatibility/libs"
-__jythonpath__="-Dpython.path=${LIRESOLR_LIBS_DIR}/lire-request-handler.jar:${LIRESOLR_LIBS_DIR}/lire.jar:${LIRESOLR_LIBS_DIR}/commons-codec-1.9.jar"
-python_args=("${python_args[@]}" "$__jythonpath__")
+LIRESOLR_LIBS="${LIRESOLR_LIBS_DIR}/*.jar"
+LIRESOLR_PATH=""
+for jar in $LIRESOLR_LIBS; do
+    LIRESOLR_PATH="$jar:${LIRESOLR_PATH}"
+done
+python_args=("${python_args[@]}" "-Dpython.path=${LIRESOLR_PATH}")
 
 # Force file.encoding to UTF-8 when on Mac, since Apple JDK defaults to MacRoman (JRUBY-3576)
 if [[ $darwin && -z "$JAVA_ENCODING" ]]; then
