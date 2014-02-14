@@ -5,6 +5,7 @@ import numpy
 import math
 
 from pylire.process.grayscale import YValue
+from pylire.process.bitsampling import histogram_hash_string
 
 THRESHOLD = 11
 NUM_BLOCK = 1100
@@ -126,6 +127,10 @@ def edge_histogram(R, G, B):
 def edge_histo_str(histogram):
     return "edgehistogram;%s" % " ".join(histogram.astype('str'))
 
+def edge_histo_bithash_str(histogram):
+    return histogram_hash_string(
+        histogram.astype('double'))
+
 
 def main():
     from pylire.compatibility.utils import test
@@ -145,9 +150,9 @@ def main():
     
     print("naive Lire port (string rep):")
     print("%s" % edge_histo_str(edge_histo))
-    # print("binary hash:")
-    # print(oh_bithash_str(hhi))
-    # print("")
+    print("binary hash:")
+    print(edge_histo_bithash_str(edge_histo))
+    print("")
     
 if __name__ == '__main__':
     main()

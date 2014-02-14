@@ -1,4 +1,4 @@
-#!/usr/bin/env jython -Dpython.console=org.python.util.ReadlineConsole
+#!/usr/bin/env jython-pylire
 
 from net.semanticmetadata.lire.imageanalysis import ColorLayout
 from net.semanticmetadata.lire.imageanalysis import EdgeHistogram
