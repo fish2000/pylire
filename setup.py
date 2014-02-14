@@ -55,6 +55,7 @@ setup(
     package_data={
         'pylire': [
             'process/bits/*.h5',
+            'compatibility/libs/*.jar',
         ],
     },
     
