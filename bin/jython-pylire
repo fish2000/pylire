@@ -214,8 +214,7 @@ while [ $# -gt 0 ] ; do
 done
 
 # ADD LIRE JARS
-BIN_DIR="${PWD##*/}"
-LIRESOLR_LIBS_DIR="${BIN_DIR}/../pylire/compatibility/libs"
+LIRESOLR_LIBS_DIR=`python -c 'import pylire;from os.path import join, dirname;print join(dirname(pylire.__file__), "compatibility", "libs")'`
 LIRESOLR_LIBS="${LIRESOLR_LIBS_DIR}/*.jar"
 LIRESOLR_PATH=""
 for jar in $LIRESOLR_LIBS; do
