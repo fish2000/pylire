@@ -76,6 +76,7 @@ def edge_histogram(R, G, B):
             # determining which type of feature we have
             eMAX = strengths[0]
             edge_feature = VERTICAL_EDGE
+            
             if strengths[1] > eMAX:
                 eMAX = strengths[1]
                 edge_feature = HORIZONTAL_EDGE
