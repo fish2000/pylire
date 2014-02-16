@@ -41,29 +41,31 @@ def edge_histogram(R, G, B):
     (W, H) = grayscale.shape[:2]
     local_histo = numpy.zeros(80, dtype="double")
     sub_local_index = 0
-    count_local = numpy.zeros(16, dtype="int")
+    count_local = numpy.zeros(16, dtype="double")
     block_size = int(math.floor((math.sqrt((W * H) / NUM_BLOCK) / 2.0)) * 2) or 2
     block_shift = block_size >> 1
+    almost_block_size = block_size - 1
+    almost_block_shift = block_shift - 1
     bs2 = float(block_size)**2
     four_over = 4.0 / bs2
     
-    for j in xrange(0, H - block_size, block_size):
-        for i in xrange(0, W - block_size, block_size):
+    for j in xrange(0, H, block_size):
+        for i in xrange(0, W, block_size):
             sub_local_index = int((i << 2) / W) + (int((j << 2) / H) << 2)
-            count_local[sub_local_index] += 1
+            count_local[sub_local_index] += 1.0
             
             averages = [
                 four_over * numpy.sum(
-                    grayscale[i:(block_shift-1)+i, j:(block_shift-1)+j],
+                    grayscale[i:almost_block_shift+i, j:almost_block_shift+j],
                     dtype="double"),
                 four_over * numpy.sum(
-                    grayscale[block_shift+i:(block_size-1)+i, j:(block_shift-1)+j],
+                    grayscale[block_shift+i:almost_block_size+i, j:almost_block_shift+j],
                     dtype="double"),
                 four_over * numpy.sum(
-                    grayscale[i:(block_shift-1)+i, block_shift+j:(block_size-1)+j],
+                    grayscale[i:almost_block_shift+i, block_shift+j:almost_block_size+j],
                     dtype="double"),
                 four_over * numpy.sum(
-                    grayscale[block_shift+i:(block_size-1)+i, block_shift+j:(block_size-1)+j],
+                    grayscale[block_shift+i:almost_block_size+i, block_shift+j:almost_block_size+j],
                     dtype="double")]
             strengths = [0.0, 0.0, 0.0, 0.0, 0.0]
             
@@ -94,30 +96,37 @@ def edge_histogram(R, G, B):
             
             # now that we have the feature,
             # use it to properly increment the histogram
-            if edge_feature == NO_EDGE:
-                pass
-            elif edge_feature == VERTICAL_EDGE:
-                local_histo[sub_local_index * 5] += 1
+            if edge_feature == VERTICAL_EDGE:
+                local_histo[sub_local_index * 5] += 1.0
             elif edge_feature == HORIZONTAL_EDGE:
-                local_histo[sub_local_index * 5 + 1] += 1
+                local_histo[sub_local_index * 5 + 1] += 1.0
             elif edge_feature == DIAGONAL_45_DEGREE_EDGE:
-                local_histo[sub_local_index * 5 + 2] += 1
+                local_histo[sub_local_index * 5 + 2] += 1.0
             elif edge_feature == DIAGONAL_135_DEGREE_EDGE:
-                local_histo[sub_local_index * 5 + 3] += 1
+                local_histo[sub_local_index * 5 + 3] += 1.0
             elif edge_feature == NON_DIRECTIONAL_EDGE:
-                local_histo[sub_local_index * 5 + 4] += 1
+                local_histo[sub_local_index * 5 + 4] += 1.0
     
     for k in xrange(len(local_histo)):
-        local_histo[k] /= count_local[int(k / 5)]
+        #local_histo[k] /= count_local[int(k / 5)]
+        local_histo[k] /= 80.0
+    
+    print("LOCAL HISTO:")
+    print(local_histo)
+    print("")
+    
+    print("LOCAL COUNT:")
+    print(count_local)
+    print("")
     
     histogram = numpy.zeros(80, dtype="int")
-    for i in xrange(len(local_histo)):
+    for idx, local_value in enumerate(local_histo):
+        quantizer = QUANT_TABLE[idx % 5]
         for j in xrange(8):
-            histogram[i] = j
+            histogram[idx] = j
             quantval = (j < 7) \
-                and (QUANT_TABLE[i % 5][j] + QUANT_TABLE[i % 5][j + 1]) / 2.0 \
-                or 1.0
-            if local_histo[i] <= quantval:
+                and numpy.average(quantizer[j:j+1]) or 1.0
+            if local_value <= quantval:
                 break
     return histogram
 
@@ -155,8 +164,10 @@ def main():
     from os.path import expanduser
     from imread import imread
     
-    pth = expanduser('~/Downloads/5717314638_2340739e06_b.jpg')
+    #pth = expanduser('~/Downloads/5717314638_2340739e06_b.jpg')
     #pth = expanduser('~/Downloads/8411181216_b16bf74632_o.jpg')
+    pth = expanduser('~/Downloads/8515292985_a657bf59bb_o.jpg')
+    
     (R, G, B) = RGB(imread(pth))
     
     @test
