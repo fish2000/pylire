@@ -161,7 +161,7 @@ def edge_histo_bithash_str(histogram):
 def edge_histo_bytes(histogram):
     bytecount = int(histogram.shape[0] / 2)
     histogrint = histogram.astype('int')
-    idx_left = numpy.arange(0, bytecount) << 1
+    idx_left = numpy.arange(bytecount) << 1
     idx_right = idx_left + 1
     return (
         ((histogrint[idx_left] << 4) | histogrint[idx_right]) - 128

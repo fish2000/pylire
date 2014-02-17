@@ -76,7 +76,7 @@ def histogram_hash(histo):
     for bundle_idx in xrange(BITS.shape[0]):
         for bit_idx in xrange(BITS.shape[1]):
             hashout[bundle_idx] += BIT_HASH_LUT[bit_idx] * int(numpy.sum(
-                BITS[bundle_idx, bit_idx, 0:histo.shape[0]] * histo) < 0)
+                BITS[bundle_idx, bit_idx, :histo.shape[0]] * histo) < 0)
     return hashout
 
 def histogram_hash_string(histo):

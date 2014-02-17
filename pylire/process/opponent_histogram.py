@@ -92,9 +92,6 @@ def main(pth):
     from pylire.process.channels import RGB
     from imread import imread
     
-    #pth = expanduser('~/Downloads/5717314638_2340739e06_b.jpg')
-    #pth = expanduser('~/Downloads/8411181216_b16bf74632_o.jpg')
-    
     (R, G, B) = RGB(imread(pth))
     
     '''@test
