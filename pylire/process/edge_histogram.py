@@ -66,10 +66,8 @@ def edge_histogram(R, G, B):
     sub_local_index = 0
     edge_feature = 0
     
-    print(grayscale)
-    
-    for j in xrange(0, (H - block_size)+1, block_size):
-        for i in xrange(0, (W - block_size)+1, block_size):
+    for j in xrange(0, (H - block_size), block_size):
+        for i in xrange(0, (W - block_size), block_size):
             sub_local_index = int((i << 2) / float(W)) + (int((j << 2) / float(H)) << 2)
             count_local[sub_local_index] += 1.0
             
@@ -130,18 +128,19 @@ def edge_histogram(R, G, B):
         #local_histo[kidx] /= count_local[kidx]
         local_histo[kidx] = numpy.divide(local_histo[kidx], count_local[kidx])
     
-    print("LOCAL HISTO:")
-    print(local_histo)
-    print("")
+    # print("LOCAL HISTO:")
+    # print(local_histo)
+    # print("")
     
-    print("LOCAL COUNT:")
-    print(count_local)
-    print("")
+    # print("LOCAL COUNT:")
+    # print(count_local)
+    # print("")
     
     histogram = numpy.zeros(80, dtype="int")
     for local_idx, local_values in enumerate(local_histo):
+        num_features = local_values.shape[0]
         for feature_idx, local_value in enumerate(local_values):
-            bin_idx = (local_idx * local_values.shape[0]) + feature_idx
+            bin_idx = (local_idx * num_features) + feature_idx
             histogram[bin_idx] = numpy.min(
                 numpy.nonzero(
                     numpy.less_equal(
@@ -181,11 +180,6 @@ def main(pth):
     from pylire.compatibility.utils import test
     from pylire.process.channels import RGB
     from imread import imread
-    
-    #pth = expanduser('~/Downloads/5717314638_2340739e06_b.jpg')
-    #pth = expanduser('~/Downloads/8411181216_b16bf74632_o.jpg')
-    #pth = expanduser('~/Downloads/8515292985_a657bf59bb_o.jpg')
-    #pth = expanduser('~/Downloads/8423590361_a0ea0e4f40_o.jpg')
     
     (R, G, B) = RGB(imread(pth))
     
