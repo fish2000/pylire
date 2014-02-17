@@ -17,12 +17,12 @@ PHOG_BINS = 30
 # but is not supported by the current serialization method.
 QUANTIZATION_FACTOR = 15.0
 
-histogram_out = numpy.zeros(
-    PHOG_BINS + 4*PHOG_BINS + 4*4*PHOG_BINS,
-    dtype="uint8")
-histogram = numpy.zeros(
-    PHOG_BINS + 4*PHOG_BINS + 4*4*PHOG_BINS,
-    dtype="double")
+# histogram_out = numpy.zeros(
+#     PHOG_BINS + 4*PHOG_BINS + 4*4*PHOG_BINS,
+#     dtype="uint8")
+# histogram = numpy.zeros(
+#     PHOG_BINS + 4*PHOG_BINS + 4*4*PHOG_BINS,
+#     dtype="double")
 
 def PHOG(original):
     (origW, origH) = original.shape[:2]

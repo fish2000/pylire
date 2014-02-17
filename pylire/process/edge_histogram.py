@@ -68,26 +68,36 @@ def edge_histogram(R, G, B):
     
     for j in xrange(0, (H - block_size), block_size):
         for i in xrange(0, (W - block_size), block_size):
-            sub_local_index = int((i << 2) / float(W)) + (int((j << 2) / float(H)) << 2)
+            sub_local_index = int((i << 2) / float(W)) + \
+                             (int((j << 2) / float(H)) << 2)
             count_local[sub_local_index] += 1.0
             
             averages = [
                 four_over * numpy.sum(
-                    grayscale[i:almost_block_shift+i, j:almost_block_shift+j],
+                    grayscale[
+                        i:almost_block_shift+i,
+                        j:almost_block_shift+j],
                     dtype="double"),
                 four_over * numpy.sum(
-                    grayscale[block_shift+i:almost_block_size+i, j:almost_block_shift+j],
+                    grayscale[
+                        block_shift+i:almost_block_size+i,
+                        j:almost_block_shift+j],
                     dtype="double"),
                 four_over * numpy.sum(
-                    grayscale[i:almost_block_shift+i, block_shift+j:almost_block_size+j],
+                    grayscale[
+                        i:almost_block_shift+i,
+                        block_shift+j:almost_block_size+j],
                     dtype="double"),
                 four_over * numpy.sum(
-                    grayscale[block_shift+i:almost_block_size+i, block_shift+j:almost_block_size+j],
+                    grayscale[
+                        block_shift+i:almost_block_size+i,
+                        block_shift+j:almost_block_size+j],
                     dtype="double")]
             strengths = [0.0, 0.0, 0.0, 0.0, 0.0]
             
             for e in xrange(5):
-                strengths[e] = numpy.absolute(numpy.sum(averages * EDGE_FILTER[e]))
+                strengths[e] = numpy.absolute(
+                    numpy.sum(averages * EDGE_FILTER[e]))
             
             # incrementally test through strengths,
             # determining which type of feature we have
@@ -111,9 +121,7 @@ def edge_histogram(R, G, B):
             
             # now that we have the feature,
             # use it to properly increment the histogram
-            if edge_feature == NO_EDGE:
-                pass
-            elif edge_feature == VERTICAL_EDGE:
+            if edge_feature == VERTICAL_EDGE:
                 local_histo[sub_local_index, 0] += 1.0
             elif edge_feature == HORIZONTAL_EDGE:
                 local_histo[sub_local_index, 1] += 1.0
@@ -125,16 +133,7 @@ def edge_histogram(R, G, B):
                 local_histo[sub_local_index, 4] += 1.0
     
     for kidx in xrange(16):
-        #local_histo[kidx] /= count_local[kidx]
         local_histo[kidx] = numpy.divide(local_histo[kidx], count_local[kidx])
-    
-    # print("LOCAL HISTO:")
-    # print(local_histo)
-    # print("")
-    
-    # print("LOCAL COUNT:")
-    # print(count_local)
-    # print("")
     
     histogram = numpy.zeros(80, dtype="int")
     for local_idx, local_values in enumerate(local_histo):
@@ -160,14 +159,13 @@ def edge_histo_bithash_str(histogram):
         histogram.astype('double'))
 
 def edge_histo_bytes(histogram):
-    histobytes = numpy.zeros(
-        int(histogram.shape[0] / 2),
-        dtype='byte')
-    for i in xrange(int(len(histogram) / 2)):
-        histobytes[i] = ((
-            histogram[i << 1].astype('int') << 4 | \
-            histogram[(i << 1) + 1].astype('int')) - 128)
-    return histobytes
+    bytecount = int(histogram.shape[0] / 2)
+    histogrint = histogram.astype('int')
+    idx_left = numpy.arange(0, bytecount) << 1
+    idx_right = idx_left + 1
+    return (
+        ((histogrint[idx_left] << 4) | histogrint[idx_right]) - 128
+    ).astype('byte')
 
 def edge_histo_base64(histobytes):
     return base64.encodestring(
