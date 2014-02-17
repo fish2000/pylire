@@ -24,29 +24,46 @@ QUANTIZATION_FACTOR = 15.0
 #     PHOG_BINS + 4*PHOG_BINS + 4*4*PHOG_BINS,
 #     dtype="double")
 
-def PHOG(original):
-    (origW, origH) = original.shape[:2]
-    gray = ITU_R_601_2(original)
+def PHOG(R, G, B):
+    gray = ITU_R_601_2(R, G, B)
     print(gray)
+    print("")
+    print("MAXIMUM GRAY: %s" % numpy.max(gray))
+    print("")
+    print("")
+
+
+
+def main(pth):
+    from pylire.compatibility.utils import test
+    from pylire.process.channels import RGB
+    from imread import imread
     
-
-
-
+    (R, G, B) = RGB(imread(pth))
+    
+    @test
+    def timetest_naive_PHOG(R, G, B):
+        phog_histo = PHOG(R, G, B)
+    
+    timetest_naive_PHOG(R, G, B)
 
 if __name__ == '__main__':
-    pth = expanduser('~/Downloads/5717314638_2340739e06_b.jpg')
-    ndim = imread(pth)
-    (R, G, B) = (channel.T for channel in ndim.T)
     
-    print histogram
+    from os.path import expanduser, basename, join
+    from os import listdir
     
-    print ""
+    im_directory = expanduser("~/Downloads")
+    im_paths = map(
+        lambda name: join(im_directory, name),
+        filter(
+            lambda name: name.lower().endswith('jpg'),
+            listdir(im_directory)))
     
-    print "ophist %d %s" % (
-        len(histogram),
-        " ".join(histogram.astype('str')))
-    
-    
-
+    for im_pth in im_paths:
+        
+        print("")
+        print("")
+        print("IMAGE: %s" % basename(im_pth))
+        main(im_pth)
 
 
