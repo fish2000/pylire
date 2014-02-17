@@ -1,5 +1,6 @@
 
-from __future__ import division, print_function
+from __future__ import division
+from __future__ import print_function
 
 import numpy
 import math
@@ -9,8 +10,8 @@ import base64
 from pylire.process.grayscale import YValue
 from pylire.process.bitsampling import histogram_hash, histogram_hash_string
 
-THRESHOLD = 11.0
-NUM_BLOCK = 1100.0
+THRESHOLD = 11
+NUM_BLOCK = 1100
 ROOT_2 = math.sqrt(2.0)
 
 NO_EDGE = 0
@@ -20,13 +21,26 @@ NON_DIRECTIONAL_EDGE = 3
 DIAGONAL_45_DEGREE_EDGE = 4
 DIAGONAL_135_DEGREE_EDGE = 5
 
+# We have appended the '2.0' values to the end of this table ...
 QUANT_TABLE = numpy.array([
-    [0.010867, 0.057915, 0.099526, 0.144849, 0.195573, 0.260504, 0.358031, 0.530128],
-    [0.012266, 0.069934, 0.125879, 0.182307, 0.243396, 0.314563, 0.411728, 0.564319],
-    [0.004193, 0.025852, 0.046860, 0.068519, 0.093286, 0.123490, 0.161505, 0.228960],
-    [0.004174, 0.025924, 0.046232, 0.067163, 0.089655, 0.115391, 0.151904, 0.217745],
-    [0.006778, 0.051667, 0.108650, 0.166257, 0.224226, 0.285691, 0.356375, 0.450972],
+    [0.010867, 0.057915, 0.099526, 0.144849, 0.195573, 0.260504, 0.358031, 0.530128, 2.0],
+    [0.012266, 0.069934, 0.125879, 0.182307, 0.243396, 0.314563, 0.411728, 0.564319, 2.0],
+    [0.004193, 0.025852, 0.046860, 0.068519, 0.093286, 0.123490, 0.161505, 0.228960, 2.0],
+    [0.004174, 0.025924, 0.046232, 0.067163, 0.089655, 0.115391, 0.151904, 0.217745, 2.0],
+    [0.006778, 0.051667, 0.108650, 0.166257, 0.224226, 0.285691, 0.356375, 0.450972, 2.0],
 ], dtype="double")
+
+# Here we average the QUANT_TABLE values, between each pair of row elements,
+# computed column-wise (thus only iterating across one array dimension) --
+quant_averages = numpy.ones((8, 5), dtype="double")
+for idx in xrange(QUANT_TABLE.shape[1]-1):
+    quant_averages[idx] = numpy.minimum(
+        numpy.average(QUANT_TABLE[:, idx:idx+2], axis=1),
+        quant_averages[idx])
+
+# -- such that the array of averaged values need only be transposed to yield
+# an array whose indices correspond to quantized histogram values. fuck yes!
+QUANTIZERS = quant_averages.T
 
 EDGE_FILTER = numpy.array([
     [1.0,    -1.0,     1.0,   -1.0],
@@ -39,19 +53,24 @@ dtype="double")
 def edge_histogram(R, G, B):
     grayscale = YValue(R, G, B)
     (W, H) = grayscale.shape[:2]
-    local_histo = numpy.zeros(80, dtype="double")
-    sub_local_index = 0
-    count_local = numpy.zeros(16, dtype="double")
-    block_size = int(math.floor((math.sqrt((W * H) / NUM_BLOCK) / 2.0)) * 2) or 2
+    a = int(math.sqrt((W * H) / NUM_BLOCK))
+    block_size = int(math.floor(float(a) / 2.0) * 2) or 2
     block_shift = block_size >> 1
     almost_block_size = block_size - 1
     almost_block_shift = block_shift - 1
     bs2 = float(block_size)**2
     four_over = 4.0 / bs2
     
-    for j in xrange(0, H, block_size):
-        for i in xrange(0, W, block_size):
-            sub_local_index = int((i << 2) / W) + (int((j << 2) / H) << 2)
+    local_histo = numpy.zeros((16, 5), dtype="double")
+    count_local = numpy.zeros(16, dtype="double")
+    sub_local_index = 0
+    edge_feature = 0
+    
+    print(grayscale)
+    
+    for j in xrange(0, (H - block_size)+1, block_size):
+        for i in xrange(0, (W - block_size)+1, block_size):
+            sub_local_index = int((i << 2) / float(W)) + (int((j << 2) / float(H)) << 2)
             count_local[sub_local_index] += 1.0
             
             averages = [
@@ -70,9 +89,7 @@ def edge_histogram(R, G, B):
             strengths = [0.0, 0.0, 0.0, 0.0, 0.0]
             
             for e in xrange(5):
-                for k in xrange(4):
-                    strengths[e] += averages[k] * EDGE_FILTER[e, k]
-                strengths[e] = abs(strengths[e])
+                strengths[e] = numpy.absolute(numpy.sum(averages * EDGE_FILTER[e]))
             
             # incrementally test through strengths,
             # determining which type of feature we have
@@ -96,20 +113,22 @@ def edge_histogram(R, G, B):
             
             # now that we have the feature,
             # use it to properly increment the histogram
-            if edge_feature == VERTICAL_EDGE:
-                local_histo[sub_local_index * 5] += 1.0
+            if edge_feature == NO_EDGE:
+                pass
+            elif edge_feature == VERTICAL_EDGE:
+                local_histo[sub_local_index, 0] += 1.0
             elif edge_feature == HORIZONTAL_EDGE:
-                local_histo[sub_local_index * 5 + 1] += 1.0
+                local_histo[sub_local_index, 1] += 1.0
             elif edge_feature == DIAGONAL_45_DEGREE_EDGE:
-                local_histo[sub_local_index * 5 + 2] += 1.0
+                local_histo[sub_local_index, 2] += 1.0
             elif edge_feature == DIAGONAL_135_DEGREE_EDGE:
-                local_histo[sub_local_index * 5 + 3] += 1.0
+                local_histo[sub_local_index, 3] += 1.0
             elif edge_feature == NON_DIRECTIONAL_EDGE:
-                local_histo[sub_local_index * 5 + 4] += 1.0
+                local_histo[sub_local_index, 4] += 1.0
     
-    for k in xrange(len(local_histo)):
-        #local_histo[k] /= count_local[int(k / 5)]
-        local_histo[k] /= 80.0
+    for kidx in xrange(16):
+        #local_histo[kidx] /= count_local[kidx]
+        local_histo[kidx] = numpy.divide(local_histo[kidx], count_local[kidx])
     
     print("LOCAL HISTO:")
     print(local_histo)
@@ -120,14 +139,14 @@ def edge_histogram(R, G, B):
     print("")
     
     histogram = numpy.zeros(80, dtype="int")
-    for idx, local_value in enumerate(local_histo):
-        quantizer = QUANT_TABLE[idx % 5]
-        for j in xrange(8):
-            histogram[idx] = j
-            quantval = (j < 7) \
-                and numpy.average(quantizer[j:j+1]) or 1.0
-            if local_value <= quantval:
-                break
+    for local_idx, local_values in enumerate(local_histo):
+        for feature_idx, local_value in enumerate(local_values):
+            bin_idx = (local_idx * local_values.shape[0]) + feature_idx
+            histogram[bin_idx] = numpy.min(
+                numpy.nonzero(
+                    numpy.less_equal(
+                        local_value,
+                        QUANTIZERS[feature_idx])))
     return histogram
 
 def edge_histo_str(histogram):
@@ -158,35 +177,51 @@ def edge_histo_base64(histobytes):
         )).replace('\n', '')
 
 
-def main():
+def main(pth):
     from pylire.compatibility.utils import test
     from pylire.process.channels import RGB
-    from os.path import expanduser
     from imread import imread
     
     #pth = expanduser('~/Downloads/5717314638_2340739e06_b.jpg')
     #pth = expanduser('~/Downloads/8411181216_b16bf74632_o.jpg')
-    pth = expanduser('~/Downloads/8515292985_a657bf59bb_o.jpg')
+    #pth = expanduser('~/Downloads/8515292985_a657bf59bb_o.jpg')
+    #pth = expanduser('~/Downloads/8423590361_a0ea0e4f40_o.jpg')
     
     (R, G, B) = RGB(imread(pth))
     
     @test
     def timetest_naive_edge_histogram(R, G, B):
-        return edge_histogram(R, G, B)
+        edge_histo = edge_histogram(R, G, B)
+        print("naive Lire port (string rep):")
+        print("%s" % edge_histo_str(edge_histo))
+        print("")
+        print("binary hash:")
+        print(edge_histo_bithash_str(edge_histo))
+        print("")
+        print("base64-encoded byte rep:")
+        print(edge_histo_base64(edge_histo_bytes(edge_histo)))
+        print("")
     
-    edge_histo = timetest_naive_edge_histogram(R, G, B)
-    
-    print("naive Lire port (string rep):")
-    print("%s" % edge_histo_str(edge_histo))
-    print("")
-    print("binary hash:")
-    print(edge_histo_bithash_str(edge_histo))
-    print("")
-    print("base64-encoded byte rep:")
-    print(edge_histo_base64(edge_histo_bytes(edge_histo)))
-    print("")
-    
+    timetest_naive_edge_histogram(R, G, B)
+
+
 if __name__ == '__main__':
-    main()
+    
+    from os.path import expanduser, basename, join
+    from os import listdir
+    
+    im_directory = expanduser("~/Downloads")
+    im_paths = map(
+        lambda name: join(im_directory, name),
+        filter(
+            lambda name: name.lower().endswith('jpg'),
+            listdir(im_directory)))
+    
+    for im_pth in im_paths:
+        
+        print("")
+        print("")
+        print("IMAGE: %s" % basename(im_pth))
+        main(im_pth)
 
 

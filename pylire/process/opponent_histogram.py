@@ -87,64 +87,79 @@ def oh_base64(histogram):
             [struct.pack('B', char) for char in histogram]
         )).replace('\n', '')
 
-def main():
+def main(pth):
     from pylire.compatibility.utils import test
     from pylire.process.channels import RGB
-    from os.path import expanduser
     from imread import imread
     
     #pth = expanduser('~/Downloads/5717314638_2340739e06_b.jpg')
-    pth = expanduser('~/Downloads/8411181216_b16bf74632_o.jpg')
+    #pth = expanduser('~/Downloads/8411181216_b16bf74632_o.jpg')
+    
     (R, G, B) = RGB(imread(pth))
     
     '''@test
     def timetest_scalar(R, G, B):
         histogram_keys = opponent_histogram_scalar_keys(R, G, B)
-        return histogram_normalize(
+        hh = histogram_normalize(
             histogram_count(
                 histogram_keys))
+        print "vectorized scalar func:"
+        print "%s" % oh_str(h)
+        print "binary hash:"
+        print oh_bithash_str(h)
+        print ""
     
-    h = timetest_scalar(R, G, B)
-    
-    print "vectorized scalar func:"
-    print "%s" % oh_str(h)
-    print "binary hash:"
-    print oh_bithash_str(h)
-    print ""'''
+    timetest_scalar(R, G, B)
+    '''
     
     @test
     def timetest_vector(R, G, B):
         histogram_key_vec = opponent_histogram_key_vector_ORIG(R, G, B)
-        return histogram_normalize(
+        hh = histogram_normalize(
             histogram_count(
                 histogram_key_vec))
+        
+        print "pure-python vector func:"
+        print "%s" % oh_str(hh)
+        print "binary hash:"
+        print oh_bithash_str(hh)
+        print ""
+        
+        return hh
     
-    hh = timetest_vector(R, G, B)
-    
-    print "native vector func:"
-    print "%s" % oh_str(hh)
-    print "binary hash:"
-    print oh_bithash_str(hh)
-    print ""
+    timetest_vector(R, G, B)
     
     @test
     def timetest_vector(R, G, B):
         histogram_key_vec_inline = opponent_histogram_key_vector(R, G, B)
-        return histogram_normalize(
+        hh = histogram_normalize(
             histogram_count(
                 histogram_key_vec_inline))
+        
+        print "native (inlined and cythonized) vector func:"
+        print "%s" % oh_str(hh)
+        print "binary hash:"
+        print oh_bithash_str(hh)
+        print ""
+        
+    timetest_vector(R, G, B)
     
-    hhi = timetest_vector(R, G, B)
-    
-    print "native vector func (with inlines):"
-    print "%s" % oh_str(hhi)
-    print "binary hash:"
-    print oh_bithash_str(hhi)
-    print ""
     
 if __name__ == '__main__':
-    main()
-    main()
-    main()
-
-
+    
+    from os.path import expanduser, basename, join
+    from os import listdir
+    
+    im_directory = expanduser("~/Downloads")
+    im_paths = map(
+        lambda name: join(im_directory, name),
+        filter(
+            lambda name: name.lower().endswith('jpg'),
+            listdir(im_directory)))
+    
+    for im_pth in im_paths:
+        
+        print ""
+        print ""
+        print "IMAGE: %s" % basename(im_pth)
+        main(im_pth)

@@ -15,6 +15,7 @@ def ITU_R_601_2(sR, sG, sB):
 def YValue(sR, sG, sB):
     """ RGB to Y value (as in YCrCb) """
     return \
-        (219.0 * (((sR * 299.0).astype('double') + \
-        (sG * 587.0).astype('double') + \
-        (sB * 114.0).astype('double')) / 256.0) + 16.5).astype('int')
+        (219.0 * (
+            (0.299 * sR + 0.587 * sG + 0.114 * sB) / 256.0
+            ).astype('double') + 16.5
+        ).astype('int')

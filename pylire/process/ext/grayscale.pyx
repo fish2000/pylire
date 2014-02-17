@@ -10,13 +10,17 @@ cdef inline FLOAT32_t sR_NUMERATOR = <FLOAT32_t>299.0
 cdef inline FLOAT32_t sG_NUMERATOR = <FLOAT32_t>587.0
 cdef inline FLOAT32_t sB_NUMERATOR = <FLOAT32_t>114.0
 cdef inline FLOAT32_t ONETHOUSAND = <FLOAT32_t>1000.0
+
+cdef inline FLOAT32_t POINTTWOONENINE = <FLOAT32_t>0.219
+cdef inline FLOAT32_t POINTFIVEEIGHTSEVEN = <FLOAT32_t>0.219
+cdef inline FLOAT32_t POINTONEFOURTEEN = <FLOAT32_t>0.219
 cdef inline FLOAT32_t TWOONENINE = <FLOAT32_t>219.0
 cdef inline FLOAT32_t TWOFIFTYSIX = <FLOAT32_t>256.0
 cdef inline FLOAT32_t SIXTEENPOINTFIVE = <FLOAT32_t>16.5
 
-
 @cython.boundscheck(False)
 @cython.wraparound(False)
+@cython.cdivision(True)
 def ITU_R_601_2(numpy.ndarray[FLOAT32_t, ndim=2] sR not None,
                 numpy.ndarray[FLOAT32_t, ndim=2] sG not None,
                 numpy.ndarray[FLOAT32_t, ndim=2] sB not None):
@@ -27,10 +31,12 @@ def ITU_R_601_2(numpy.ndarray[FLOAT32_t, ndim=2] sR not None,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
+@cython.cdivision(True)
 def YValue(numpy.ndarray[FLOAT32_t, ndim=2] sR not None,
            numpy.ndarray[FLOAT32_t, ndim=2] sG not None,
            numpy.ndarray[FLOAT32_t, ndim=2] sB not None):
     return \
-        (TWOONENINE * (((sR * sR_NUMERATOR).astype('double') + \
-        (sG * sG_NUMERATOR).astype('double') + \
-        (sB * sB_NUMERATOR).astype('double')) / TWOFIFTYSIX) + SIXTEENPOINTFIVE).astype('int')
+        (TWOONENINE * (
+            (POINTTWOONENINE * sR + POINTFIVEEIGHTSEVEN * sG + POINTONEFOURTEEN * sB) / TWOFIFTYSIX
+            ).astype('double') + SIXTEENPOINTFIVE
+        ).astype('int')

@@ -7,6 +7,8 @@ cimport cython
 cdef extern from "math.h":
     double sqrt(double x)
 
+from libc.math cimport M_SQRT2
+
 INT = numpy.int
 UINT8 = numpy.uint8
 FLOAT32 = numpy.float32
@@ -15,9 +17,9 @@ ctypedef numpy.int_t INT_t
 ctypedef numpy.uint8_t UINT8_t
 ctypedef numpy.float32_t FLOAT32_t
 
-cdef inline float csqrt(float x): return <FLOAT32_t>sqrt(<double>x)
+cdef inline FLOAT32_t csqrt(float x): return <FLOAT32_t>sqrt(<double>x)
 
-cdef inline FLOAT32_t ROOT_2 = csqrt(2.0)
+cdef inline FLOAT32_t ROOT_2 = <FLOAT32_t>M_SQRT2
 cdef inline FLOAT32_t ROOT_3 = csqrt(3.0)
 cdef inline FLOAT32_t ROOT_6 = csqrt(6.0)
 
@@ -30,17 +32,18 @@ cdef inline INT_t FOURBYFOUR = <INT_t>4 * <INT_t>4
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
+@cython.cdivision(True)
 def opponent_histogram_key_vector(numpy.ndarray[FLOAT32_t, ndim=2] sR not None,
                                   numpy.ndarray[FLOAT32_t, ndim=2] sG not None,
                                   numpy.ndarray[FLOAT32_t, ndim=2] sB not None):
     return \
         (numpy.minimum(numpy.floor(
             ((((sR - sG) / ROOT_2) + \
-                TWOFIFTYFIVE_OVER_ROOT2).astype('float32') / \
-                FIVETEN_OVER_ROOT2) * 4.0), 3.0)).astype('int') + \
+                TWOFIFTYFIVE_OVER_ROOT2).astype(FLOAT32) / \
+                FIVETEN_OVER_ROOT2) * 4.0), 3.0)).astype(INT) + \
         (numpy.minimum(numpy.floor(
-            ((((sR + sG - 2 * sB) / ROOT_6).astype('float32') + FIVETEN_OVER_ROOT6) / \
-                TENTWENTY_OVER_ROOT6) * 4.0), 3.0)).astype('int') * 4 + \
+            ((((sR + sG - 2 * sB) / ROOT_6).astype(FLOAT32) + FIVETEN_OVER_ROOT6) / \
+                TENTWENTY_OVER_ROOT6) * 4.0), 3.0)).astype(INT) * 4 + \
         (numpy.minimum(3.0, numpy.floor(
-            (((sR + sG + sB) / ROOT_3).astype('float32') / \
-                THREE_TIMES_TWOFIFTYFIVE_OVER_ROOT3) * 4.0))).astype('int') * FOURBYFOUR
+            (((sR + sG + sB) / ROOT_3).astype(FLOAT32) / \
+                THREE_TIMES_TWOFIFTYFIVE_OVER_ROOT3) * 4.0))).astype(INT) * FOURBYFOUR

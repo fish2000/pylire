@@ -33,8 +33,7 @@ BIT_BUCKET = join(
     dirname(__file__), 'bits')
 
 BIT_STORE = h5py.File(
-    join(BIT_BUCKET,
-        'hash-functions.h5'),
+    join(BIT_BUCKET, 'hash-functions.h5'),
     libver='latest')
 
 BITSET = BIT_STORE.require_dataset(
@@ -56,8 +55,15 @@ def _generate_shuffled_hasher():
     BITSET.read_direct(BITS)
     BIT_STORE.flush()
 
+def _store_hasher_dataset_attributes():
+    BITSET.attrs['function_bundles'] = NUM_FUNCTION_BUNDLES
+    BITSET.attrs['bits'] = NUM_BITS
+    BITSET.attrs['dimensions'] = NUM_DIMENSIONS
+    BIT_STORE.flush()
+
 def int_to_hex(int_vector):
-    """ Converts vector of integers to hex string. Adapted from:
+    """ Converts vector of integers to hex string.
+        Adapted from:
     https://github.com/RedDevil7/groupimg/blob/master/v1/compute_hashes.py """
     return " ".join([hex(xx)[2:].zfill(2) for xx in int_vector])
     
@@ -69,10 +75,8 @@ def histogram_hash(histo):
     hashout = numpy.zeros(BITS.shape[0], dtype="int")
     for bundle_idx in xrange(BITS.shape[0]):
         for bit_idx in xrange(BITS.shape[1]):
-            val = 0.0
-            for dimension_idx in xrange(histo.shape[0]):
-                val += BITS[bundle_idx, bit_idx, dimension_idx] * histo[dimension_idx]
-            hashout[bundle_idx] += BIT_HASH_LUT[bit_idx] * int(val < 0)
+            hashout[bundle_idx] += BIT_HASH_LUT[bit_idx] * int(numpy.sum(
+                BITS[bundle_idx, bit_idx, 0:histo.shape[0]] * histo) < 0)
     return hashout
 
 def histogram_hash_string(histo):
@@ -80,21 +84,35 @@ def histogram_hash_string(histo):
 
 @test
 def main():
-    """ Display the hash function array (generating it if needed)
+    """ Display the hash function array (generating it if needed) """
         
-        WARNING: don't uncomment this unles you need to --
-        the disk file has to stay consistent for your
-        searches to make any sense.
-    """
+    # WARNING: don't uncomment this unles you need to --
+    # the disk file has to stay consistent for your
+    # searches to make any sense.
     #_generate_shuffled_hasher()
     
-    print("""
-*************************************************************************
+    # This next bit sets attributes in the HDF5 dataset `BITSET`
+    # with values for the bitsets' metadata:
+    #   - 'function_bundles' (= NUM_FUNCTION_BUNDLES)
+    #   - 'bits' (= NUM_BITS)
+    #   - 'dimensions' (= NUM_DIMENSIONS)
+    # ... this is generally not needed as we get these values from the
+    # `BITSET.shape` triple -- but are of use if deserializing the array
+    # in other contexts (like e.g. Java).
+    #_store_hasher_dataset_attributes()
     
-    Uncomment the function call to _generate_shuffled_hasher() --
-    above this message in the code -- 
-    to regenerate the serialized bit-sampling hash function array
-    that is cached on disk in process/bits/hash-functions.h5
+    
+    print("""
+    Uncomment the function call to
+    
+        _generate_shuffled_hasher()
+    
+    (above this message in the code) if you want to regenerate
+    the serialized bit-sampling hash function array that is cached
+    on disk in process/bits/hash-functions.h5
+    
+
+******************************************************************************
     
     
     BIT SAMPLING TESTS:
@@ -103,23 +121,27 @@ def main():
     NUM_DIMENSIONS = %s
     NUM_FUNCTION_BUNDLES = %s
     
+    BITS.attrs:
+    
+        %s
+    
+    
     len(BITS) = %s
     
-    
-    BITS[0, 0] = 
+    BITS[0, 0, -50:] = 
         
         %s
     
     
-    
-*************************************************************************
     """ % (
         NUM_BITS,
         NUM_DIMENSIONS,
         NUM_FUNCTION_BUNDLES,
+        "\n\t".join(
+            map(lambda kv: "%16s  %s" % kv, BITSET.attrs.items())),
         len(BITS),
         numpy.array2string(
-            BITS[0, 0],
+            BITS[0, 0, -50:],
             max_line_width=40,
             precision=2,
             suppress_small=True).replace('\n', "\n\t")))
