@@ -13,19 +13,17 @@ PHOG_BINS = 30
 PI_OVER_TWO = numpy.pi / 2.0
 PI_OVER_EIGHT = numpy.pi / 8.0
 THREE_PI_OVER_EIGHT = 3.0 * numpy.pi / 8.0
+PI_PLUS_POINT_FIVE = numpy.pi + 0.5
+
+BINS_TIMES_TWO = PHOG_BINS * 2
+BINS_TIMES_THREE = PHOG_BINS * 3
+BINS_TIMES_FOUR = PHOG_BINS * 4
 
 # Notes (from the Lire source):
 # // used to quantize bins to [0, quantizationFactor]
 # // Note that a quantization factor of 127d has better precision,
 # but is not supported by the current serialization method.
 QUANTIZATION_FACTOR = 15.0
-
-# histogram_out = numpy.zeros(
-#     PHOG_BINS + 4*PHOG_BINS + 4*4*PHOG_BINS,
-#     dtype="uint8")
-# histogram = numpy.zeros(
-#     PHOG_BINS + 4*PHOG_BINS + 4*4*PHOG_BINS,
-#     dtype="double")
 
 
 def set_canny_pixel(x, y, grayscale, value):
@@ -47,6 +45,33 @@ def track_weak_ones(x, y, grayscale):
                 grayscale[xx, yy] = 0
                 track_weak_ones(xx, yy, grayscale)
 
+def naive_subphog(X, Y, W, H, grayscale, grayD):
+    subhistogram = numpy.zeros(PHOG_BINS, dtype="double")
+    for x in xrange(X, X + W):
+        for y in xrange(Y, Y + H):
+            # N.B. replace this shit with a numpy.where() call
+            if grayscale[x, y] < 50:
+                # "it's an edge pixel, so it counts in."
+                actual = (grayD[x, y] / PI_PLUS_POINT_FIVE) * PHOG_BINS
+                bindex = math.floor(actual) != PHOG_BINS and int(math.floor(actual)) or 0
+                if actual == math.floor(actual):
+                    # "if it's a discrete thing ..."
+                    subhistogram[bindex] += 1
+                else:
+                    subhistogram[bindex] += actual - math.floor(actual)
+                    binhigh = math.ceil(actual) != PHOG_BINS and int(math.ceil(actual)) or 0
+                    subhistogram[binhigh] += math.ceil(actual) - actual
+    
+    # "normalize histogram to max norm."
+    # NB. this piece is actually vectorized
+    histomax = numpy.max(subhistogram)
+    if histomax > 0.0:
+        subhistogram = numpy.min(
+            QUANTIZATION_FACTOR,
+            numpy.floor(
+                QUANTIZATION_FACTOR * subhistogram / histomax))
+    
+    return subhistogram
 
 def naive_sobel(grayscale):
     """ Totally naive port of pixel-loop logic, taken straight
@@ -133,13 +158,6 @@ def PHOG(R, G, B):
             
             else:
                 grayscale[x, y] = 255
-            
-    
-    # print(grayscale)
-    # print("")
-    # print("MAXIMUM GRAY: %s" % numpy.max(grayscale))
-    # print("")
-    # print("")
     
     # "hysteresis ... walk along lines of strong pixels and make the weak ones strong."
     for x in xrange(1, W - 1):
@@ -154,8 +172,44 @@ def PHOG(R, G, B):
             if grayscale[x, y] > 50:
                 grayscale[x, y] = 255
     
+    # As they say in lire:
+    # "Canny Edge Detection over ... lets go for the PHOG ..."
+    histogram = numpy.zeros(
+        PHOG_BINS + 4*PHOG_BINS + 4*4*PHOG_BINS,
+        dtype="double")
     
+    # public static void arraycopy(Object src, int srcPos,
+    #                              Object dest, int destPos, int length)
     
+    # "level0"
+    histogram[:PHOG_BINS] = naive_subphog(
+        0, 0, W, H, grayscale, grayD)
+    
+    # "level1"
+    histogram[PHOG_BINS:PHOG_BINS+PHOG_BINS] = naive_subphog(
+        0, 0, W / 2, H / 2, grayscale, grayD)
+    
+    histogram[BINS_TIMES_TWO:PHOG_BINS+BINS_TIMES_TWO] = naive_subphog(
+        W / 2, 0, W / 2, H / 2, grayscale, grayD)
+    
+    histogram[BINS_TIMES_THREE:PHOG_BINS+BINS_TIMES_THREE] = naive_subphog(
+        0, H / 2, W / 2, H / 2, grayscale, grayD)
+    
+    histogram[BINS_TIMES_FOUR:PHOG_BINS+BINS_TIMES_FOUR] = naive_subphog(
+        W / 2, H / 2, W / 2, H / 2, grayscale, grayD)
+    
+    # "level 2"
+    wstep = int(W / 4)
+    hstep = int(H / 4)
+    binpos = 5 # "the next free section in the histogram"
+    for xidx in xrange(4):
+        for yidx in xrange(4):
+            offset = binpos * PHOG_BINS
+            histogram[offset:PHOG_BINS+offset] = naive_subphog(
+                xidx * wstep, yidx * hstep, wstep, hstep, grayscale, grayD)
+            binpos += 1
+    
+    return histogram.astype("byte")
 
 
 def main(pth):
