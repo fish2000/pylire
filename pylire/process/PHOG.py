@@ -55,7 +55,7 @@ def naive_sobel(grayscale):
         ... There are a bajillion better ways to Sobel things
         (including fast Python implementations in scipy,
         scikit-image, and mahotas) which will replace this
-        torturously brainded semantic-wholesale-copy Java-style
+        torturously braindead semantic-wholesale-copy Java-style
         for-loop hodown... in THE FUTURE. """
     (W, H) = grayscale.shape[:2]
     sobelX = numpy.zeros((W, H), dtype="double")
@@ -153,6 +153,8 @@ def PHOG(R, G, B):
         for y in xrange(2, H - 2):
             if grayscale[x, y] > 50:
                 grayscale[x, y] = 255
+    
+    
     
 
 
