@@ -27,6 +27,7 @@ QUANTIZATION_FACTOR = 15.0
 #     PHOG_BINS + 4*PHOG_BINS + 4*4*PHOG_BINS,
 #     dtype="double")
 
+
 def set_canny_pixel(x, y, grayscale, value):
     if value > CANNY_THRESHOLD_LOW:
         grayscale[x, y] = 0
@@ -35,8 +36,16 @@ def set_canny_pixel(x, y, grayscale, value):
     else:
         grayscale[x, y] = 255
 
+
 def track_weak_ones(x, y, grayscale):
-    pass
+    """ Tail-recursive neighborhood-stalking function to hunt
+        and normalize weak pixels (with extreme predjudice) """
+    for xx in xrange(x - 1, x + 1):
+        for yy in xrange(y - 1, y + 1):
+            # 'if isWeak()' (unrolled)
+            if 0 < grayscale[xx, yy] < 255:
+                grayscale[xx, yy] = 0
+                track_weak_ones(xx, yy, grayscale)
 
 
 def naive_sobel(grayscale):
@@ -135,8 +144,15 @@ def PHOG(R, G, B):
     # "hysteresis ... walk along lines of strong pixels and make the weak ones strong."
     for x in xrange(1, W - 1):
         for y in xrange(1, H - 1):
+            # track_weak_ones() is tail-call recursive
             grayscale[x, y] < 50 and track_weak_ones(x, y, grayscale)
     
+    # "removing the single weak pixels." -- as Frank Underwood says,
+    # "Cleave them from the herd, and watch them die."
+    for x in xrange(2, W - 2):
+        for y in xrange(2, H - 2):
+            if grayscale[x, y] > 50:
+                grayscale[x, y] = 255
     
 
 
