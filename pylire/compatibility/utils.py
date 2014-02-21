@@ -11,8 +11,9 @@ from functools import wraps
 BREAKER = 98
 CODEC = 'iso-8859-1'
 
-def print_array_info(this_array, title=None):
+def print_array_info(in_array, title=None):
     sout = codecs.getwriter(CODEC)(sys.stdout)
+    this_array = numpy.array(in_array)
     
     def tprint(string):
          print(string, file=sout)
@@ -35,19 +36,22 @@ def print_array_info(this_array, title=None):
             max_line_width=BREAKER
         )))
     
+    shape = getattr(this_array, 'shape', tuple())
+    dtype = getattr(this_array, 'dtype', numpy.dtype(None))
+    
     tprint("""
   shape: %s
   dtype: %s [%s] %s
   max: %s min: %s average: %s
         """ % (
-            str(this_array.shape),
-            str(this_array.dtype.name),
-            str(this_array.dtype.char),
+            str(shape),
+            str(dtype.name),
+            str(dtype.char),
             
                 ", ".join([
                     "(%s)" % ", ".join(
                         desc for desc in descr if desc
-                    ) for descr in this_array.dtype.descr if descr
+                    ) for descr in dtype.descr if descr
                 ]),
             
             numpy.max(this_array),

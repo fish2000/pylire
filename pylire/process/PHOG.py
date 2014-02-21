@@ -78,16 +78,25 @@ def naive_subphog(X, Y, W, H, grayscale, grayD):
 
 
 def vector_subphog(X, Y, W, H, grayscale, grayD):
-    from numpy.ma import MaskedArray
+    #from numpy.ma import MaskedArray
+    import scipy.stats
     
     subhistogram = numpy.zeros(PHOG_BINS, dtype="double")
     subphog = grayscale[X:(X+W), Y:(Y+H)] < 50
-    bindex = numpy.floor((MaskedArray(grayD, mask=subphog) / numpy.pi + 0.5) * PHOG_BINS).astype('int')
+    #bindex = numpy.floor((MaskedArray(grayD, mask=subphog) / numpy.pi + 0.5) * PHOG_BINS).astype('int')
     # bins = numpy.bincount(numpy.where(bindex == PHOG_BINS, 0, bindex))
     
-    
+    print_array_info(grayD, title="grayD")
     print_array_info(subphog, title="subphog")
-    print_array_info(bindex, title="bindex")
+    #print_array_info(bindex, title="bindex")
+    
+    subdirectionals = (grayD[subphog] / numpy.pi + 0.5) * PHOG_BINS
+    histo = numpy.bincount(
+        numpy.where(
+            subdirectionals.astype('int') == PHOG_BINS,
+            0, subdirectionals.astype('int')))
+    
+    print_array_info(histo, title="HISTOGRAM (grayD[subphog])")
     # print_array_info(bins, title="BINS")
     
     
