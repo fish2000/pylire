@@ -66,7 +66,7 @@ def naive_subphog(X, Y, W, H, grayscale, grayD):
     # NB. this piece is actually vectorized
     histomax = numpy.max(subhistogram)
     if histomax > 0.0:
-        subhistogram = numpy.min(
+        subhistogram = numpy.minimum(
             QUANTIZATION_FACTOR,
             numpy.floor(
                 QUANTIZATION_FACTOR * subhistogram / histomax))
@@ -187,16 +187,16 @@ def PHOG(R, G, B):
     
     # "level1"
     histogram[PHOG_BINS:PHOG_BINS+PHOG_BINS] = naive_subphog(
-        0, 0, W / 2, H / 2, grayscale, grayD)
+        0, 0, int(W / 2), int(H / 2), grayscale, grayD)
     
     histogram[BINS_TIMES_TWO:PHOG_BINS+BINS_TIMES_TWO] = naive_subphog(
-        W / 2, 0, W / 2, H / 2, grayscale, grayD)
+        int(W / 2), 0, int(W / 2), int(H / 2), grayscale, grayD)
     
     histogram[BINS_TIMES_THREE:PHOG_BINS+BINS_TIMES_THREE] = naive_subphog(
-        0, H / 2, W / 2, H / 2, grayscale, grayD)
+        0, int(H / 2), int(W / 2), int(H / 2), grayscale, grayD)
     
     histogram[BINS_TIMES_FOUR:PHOG_BINS+BINS_TIMES_FOUR] = naive_subphog(
-        W / 2, H / 2, W / 2, H / 2, grayscale, grayD)
+        int(W / 2), int(H / 2), int(W / 2), int(H / 2), grayscale, grayD)
     
     # "level 2"
     wstep = int(W / 4)
@@ -212,6 +212,19 @@ def PHOG(R, G, B):
     return histogram.astype("byte")
 
 
+def PHOG_bytes(histogram):
+    """ N.B. THIS FUNCTION IS EXACTLY THE SAME AS edge_histo_bytes()
+        IN THE edge_histogram MODULE SO EVENTUALLY SOMEONE SHOULD DO
+        SOMETHING ABOUT THAT OK YEAH """
+    bytecount = int(histogram.shape[0] / 2)
+    histogrint = histogram.astype('int')
+    idx_left = numpy.arange(bytecount) << 1
+    idx_right = idx_left + 1
+    return (
+        ((histogrint[idx_left] << 4) | histogrint[idx_right]) - 128
+    ).astype('byte')
+
+
 def main(pth):
     from pylire.compatibility.utils import test
     from pylire.process.channels import RGB
@@ -221,7 +234,10 @@ def main(pth):
     
     @test
     def timetest_naive_PHOG(R, G, B):
-        phog_histo = PHOG(R, G, B)
+        phog = PHOG(R, G, B)
+        print("naive Lire port (raw PHOG histo):")
+        print("%s" % phog)
+        print("")
     
     timetest_naive_PHOG(R, G, B)
 
