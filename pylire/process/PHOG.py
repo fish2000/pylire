@@ -2,6 +2,7 @@
 from __future__ import division
 
 from scipy.ndimage import sobel as scipy_sobel
+from skimage.filter import canny as skimage_canny
 import numpy
 import math
 
@@ -53,7 +54,7 @@ def naive_subphog(X, Y, W, H, grayscale, grayD):
             # N.B. replace this shit with a numpy.where() call
             if grayscale[x, y] < 50:
                 # "it's an edge pixel, so it counts in."
-                actual = (grayD[x, y] / PI_PLUS_POINT_FIVE) * PHOG_BINS
+                actual = (grayD[x, y] / numpy.pi + 0.5) * PHOG_BINS
                 bindex = math.floor(actual) != PHOG_BINS and int(math.floor(actual)) or 0
                 if actual == math.floor(actual):
                     # "if it's a discrete thing ..."
@@ -73,6 +74,48 @@ def naive_subphog(X, Y, W, H, grayscale, grayD):
                 QUANTIZATION_FACTOR * subhistogram / histomax))
     
     return subhistogram
+
+
+def vector_subphog(X, Y, W, H, grayscale, grayD):
+    subhistogram = numpy.zeros(PHOG_BINS, dtype="double")
+    subphog = grayscale[X:(X+W), Y:(Y+H)]
+    bindexfp = ((grayD[X:(X+W), Y:(Y+H)] / numpy.pi + 0.5) * PHOG_BINS).astype('double')
+    binvalues = numpy.where(numpy.floor(bindexfp) == bindexfp,
+        1, bindexfp - numpy.floor(bindexfp))
+    binhighs = numpy.where(numpy.floor(bindexfp) == bindexfp,
+        0, numpy.ceil(bindexfp) - bindexfp)
+    bindexes = binvalues + binhighs
+    
+    print("BINDEXES:")
+    print(numpy.array2string(bindexes))
+    print("max: %s min: %s" % (numpy.max(bindexes), numpy.min(bindexes)))
+    
+    return
+    
+    # yo = numpy.where(numpy.floor(bindexfp) == PHOG_BINS, 0, numpy.floor(bindexfp))
+    # bindexes = numpy.where(bindexfp == numpy.floor(bindexfp),
+    #     (numpy.floor(bindexfp).astype('int'), 1),
+    #     (numpy.floor(bindexfp).astype('int'), bindexfp - numpy.floor(bindexfp)))
+    # bindexes = numpy.zeros_like(subphog)
+    # bindexes += numpy.where(values == numpy.floor(values).astype('int'),
+    #     1, (values - numpy.floor(values)))
+    # bindexes += numpy.where(values == numpy.ceil(values).astype('int'),
+    #     0, (numpy.ceil(values) - values))
+    # print("BINDEXES:")
+    # print(bindexes)
+    # return
+    
+    # "normalize histogram to max norm."
+    # NB. this piece is actually vectorized
+    histomax = numpy.max(subhistogram)
+    if histomax > 0.0:
+        subhistogram = numpy.minimum(
+            QUANTIZATION_FACTOR,
+            numpy.floor(
+                QUANTIZATION_FACTOR * subhistogram / histomax))
+    
+    return subhistogram
+
 
 def naive_sobel(grayscale):
     """ Totally naive port of pixel-loop logic, taken straight
@@ -119,7 +162,7 @@ def PHOG(R, G, B):
     scipy_sobel(grayscale, axis=1, output=sobelY)
     
     grayD = numpy.zeros((W, H), dtype="double")
-    grayM = numpy.zeros((W, H), dtype="double")
+    # grayM = numpy.zeros((W, H), dtype="double")
     
     # "setting gradient magnitude and gradinet direction"
     for x in xrange(W):
@@ -128,81 +171,101 @@ def PHOG(R, G, B):
                 grayD[x, y] = math.atan(sobelY[x, y] / sobelX[x, y])
             else:
                 grayD[x, y] = PI_OVER_TWO
-            #grayM[x, y] = math.sqrt(sobelY[x, y]**2 + sobelX[x, y]**2)
-    grayM = numpy.sqrt(numpy.square(sobelY) + numpy.square(sobelX))
+    
+    # grayM = numpy.sqrt(numpy.square(sobelY) + numpy.square(sobelX))
     
     # "non-maximum suppression"
-    grayscale[:, 0] = 255
-    grayscale[:, H - 1] = 255
-    grayscale[0, :] = 255
-    grayscale[W - 1, :] = 255
+    # grayscale[:, 0] = 255
+    # grayscale[:, H - 1] = 255
+    # grayscale[0, :] = 255
+    # grayscale[W - 1, :] = 255
+    # 
+    # for x in xrange(1, W - 1):
+    #     for y in xrange(1, H - 1):
+    #         
+    #         if grayD[x, y] < PI_OVER_EIGHT and grayD[x, y] >= -PI_OVER_EIGHT:
+    #             if grayM[x, y] > grayM[x + 1, y] and grayM[x, y] > grayM[x - 1, y]:
+    #                 #set_canny_pixel(x, y, grayscale, grayM[x, y])
+    #                 if grayM[x, y] > CANNY_THRESHOLD_LOW:
+    #                     grayscale[x, y] = 0
+    #                 elif grayM[x, y] > CANNY_THRESHOLD_HIGH:
+    #                     grayscale[x, y] = 128
+    #                 else:
+    #                     grayscale[x, y] = 255
+    #             else:
+    #                 grayscale[x, y] = 255
+    #         
+    #         elif grayD[x, y] < THREE_PI_OVER_EIGHT and grayD[x, y] >= PI_OVER_EIGHT:
+    #             if grayM[x, y] > grayM[x - 1, y - 1] and grayM[x, y] > grayM[x + 1, y + 1]:
+    #                 #set_canny_pixel(x, y, grayscale, grayM[x, y])
+    #                 if grayM[x, y] > CANNY_THRESHOLD_LOW:
+    #                     grayscale[x, y] = 0
+    #                 elif grayM[x, y] > CANNY_THRESHOLD_HIGH:
+    #                     grayscale[x, y] = 128
+    #                 else:
+    #                     grayscale[x, y] = 255
+    #             else:
+    #                 grayscale[x, y] = 255
+    # 
+    #         elif grayD[x, y] < -THREE_PI_OVER_EIGHT or grayD[x, y] >= THREE_PI_OVER_EIGHT:
+    #             if grayM[x, y] > grayM[x, y + 1] and grayM[x, y] > grayM[x, y - 1]:
+    #                 #set_canny_pixel(x, y, grayscale, grayM[x, y])
+    #                 if grayM[x, y] > CANNY_THRESHOLD_LOW:
+    #                     grayscale[x, y] = 0
+    #                 elif grayM[x, y] > CANNY_THRESHOLD_HIGH:
+    #                     grayscale[x, y] = 128
+    #                 else:
+    #                     grayscale[x, y] = 255
+    #             else:
+    #                 grayscale[x, y] = 255
+    #         
+    #         elif grayD[x, y] < -PI_OVER_EIGHT and grayD[x, y] >= -THREE_PI_OVER_EIGHT:
+    #             if grayM[x, y] > grayM[x + 1, y - 1] and grayM[x, y] > grayM[x - 1, y + 1]:
+    #                 #set_canny_pixel(x, y, grayscale, grayM[x, y])
+    #                 if grayM[x, y] > CANNY_THRESHOLD_LOW:
+    #                     grayscale[x, y] = 0
+    #                 elif grayM[x, y] > CANNY_THRESHOLD_HIGH:
+    #                     grayscale[x, y] = 128
+    #                 else:
+    #                     grayscale[x, y] = 255
+    #             else:
+    #                 grayscale[x, y] = 255
+    #         
+    #         else:
+    #             grayscale[x, y] = 255
+    # 
+    # # "hysteresis ... walk along lines of strong pixels and make the weak ones strong."
+    # for x in xrange(1, W - 1):
+    #     for y in xrange(1, H - 1):
+    #         # track_weak_ones() is tail-call recursive
+    #         grayscale[x, y] < 50 and track_weak_ones(x, y, grayscale)
+    # 
+    # # "removing the single weak pixels." -- as Frank Underwood says,
+    # # "Cleave them from the herd, and watch them die."
+    # for x in xrange(2, W - 2):
+    #     for y in xrange(2, H - 2):
+    #         if grayscale[x, y] > 50:
+    #             grayscale[x, y] = 255
+    # 
+    # print("POST-CANNY:")
+    # print("grayscale:")
+    # print(grayscale)
+    # print("")
+    # print("max(grayscale) = %s" % numpy.max(grayscale))
+    # print("min(grayscale) = %s" % numpy.min(grayscale))
+    # print("average(grayscale) = %s" % numpy.average(grayscale))
+    # print("bincount(grayscale) = %s" % numpy.bincount(grayscale.flatten()))
+    # print("")
+    # 
+    # print("")
+    # print("grayD:")
+    # print(grayD)
+    # print("grayM:")
+    # print(grayM)
     
-    for x in xrange(1, W - 1):
-        for y in xrange(1, H - 1):
-            
-            if grayD[x, y] < PI_OVER_EIGHT and grayD[x, y] >= -PI_OVER_EIGHT:
-                if grayM[x, y] > grayM[x + 1, y] and grayM[x, y] > grayM[x - 1, y]:
-                    #set_canny_pixel(x, y, grayscale, grayM[x, y])
-                    if grayM[x, y] > CANNY_THRESHOLD_LOW:
-                        grayscale[x, y] = 0
-                    elif grayM[x, y] > CANNY_THRESHOLD_HIGH:
-                        grayscale[x, y] = 128
-                    else:
-                        grayscale[x, y] = 255
-                else:
-                    grayscale[x, y] = 255
-            
-            elif grayD[x, y] < THREE_PI_OVER_EIGHT and grayD[x, y] >= PI_OVER_EIGHT:
-                if grayM[x, y] > grayM[x - 1, y - 1] and grayM[x, y] > grayM[x + 1, y + 1]:
-                    #set_canny_pixel(x, y, grayscale, grayM[x, y])
-                    if grayM[x, y] > CANNY_THRESHOLD_LOW:
-                        grayscale[x, y] = 0
-                    elif grayM[x, y] > CANNY_THRESHOLD_HIGH:
-                        grayscale[x, y] = 128
-                    else:
-                        grayscale[x, y] = 255
-                else:
-                    grayscale[x, y] = 255
-    
-            elif grayD[x, y] < -THREE_PI_OVER_EIGHT or grayD[x, y] >= THREE_PI_OVER_EIGHT:
-                if grayM[x, y] > grayM[x, y + 1] and grayM[x, y] > grayM[x, y - 1]:
-                    #set_canny_pixel(x, y, grayscale, grayM[x, y])
-                    if grayM[x, y] > CANNY_THRESHOLD_LOW:
-                        grayscale[x, y] = 0
-                    elif grayM[x, y] > CANNY_THRESHOLD_HIGH:
-                        grayscale[x, y] = 128
-                    else:
-                        grayscale[x, y] = 255
-                else:
-                    grayscale[x, y] = 255
-            
-            elif grayD[x, y] < -PI_OVER_EIGHT and grayD[x, y] >= -THREE_PI_OVER_EIGHT:
-                if grayM[x, y] > grayM[x + 1, y - 1] and grayM[x, y] > grayM[x - 1, y + 1]:
-                    #set_canny_pixel(x, y, grayscale, grayM[x, y])
-                    if grayM[x, y] > CANNY_THRESHOLD_LOW:
-                        grayscale[x, y] = 0
-                    elif grayM[x, y] > CANNY_THRESHOLD_HIGH:
-                        grayscale[x, y] = 128
-                    else:
-                        grayscale[x, y] = 255
-                else:
-                    grayscale[x, y] = 255
-            
-            else:
-                grayscale[x, y] = 255
-    
-    # "hysteresis ... walk along lines of strong pixels and make the weak ones strong."
-    for x in xrange(1, W - 1):
-        for y in xrange(1, H - 1):
-            # track_weak_ones() is tail-call recursive
-            grayscale[x, y] < 50 and track_weak_ones(x, y, grayscale)
-    
-    # "removing the single weak pixels." -- as Frank Underwood says,
-    # "Cleave them from the herd, and watch them die."
-    for x in xrange(2, W - 2):
-        for y in xrange(2, H - 2):
-            if grayscale[x, y] > 50:
-                grayscale[x, y] = 255
+    grayscale = skimage_canny(grayscale,
+        low_threshold=CANNY_THRESHOLD_LOW,
+        high_threshold=CANNY_THRESHOLD_HIGH).astype('int') * 255
     
     # As they say in lire:
     # "Canny Edge Detection over ... lets go for the PHOG ..."
@@ -214,19 +277,24 @@ def PHOG(R, G, B):
     #                              Object dest, int destPos, int length)
     
     # "level0"
+    vector_subphog(0, 0, W, H, grayscale, grayD)
     histogram[:PHOG_BINS] = naive_subphog(
         0, 0, W, H, grayscale, grayD)
     
     # "level1"
+    vector_subphog(0, 0, int(W / 2), int(H / 2), grayscale, grayD)
     histogram[PHOG_BINS:PHOG_BINS+PHOG_BINS] = naive_subphog(
         0, 0, int(W / 2), int(H / 2), grayscale, grayD)
     
+    vector_subphog(int(W / 2), 0, int(W / 2), int(H / 2), grayscale, grayD)
     histogram[BINS_TIMES_TWO:PHOG_BINS+BINS_TIMES_TWO] = naive_subphog(
         int(W / 2), 0, int(W / 2), int(H / 2), grayscale, grayD)
     
+    vector_subphog(0, int(H / 2), int(W / 2), int(H / 2), grayscale, grayD)
     histogram[BINS_TIMES_THREE:PHOG_BINS+BINS_TIMES_THREE] = naive_subphog(
         0, int(H / 2), int(W / 2), int(H / 2), grayscale, grayD)
     
+    vector_subphog(int(W / 2), int(H / 2), int(W / 2), int(H / 2), grayscale, grayD)
     histogram[BINS_TIMES_FOUR:PHOG_BINS+BINS_TIMES_FOUR] = naive_subphog(
         int(W / 2), int(H / 2), int(W / 2), int(H / 2), grayscale, grayD)
     
@@ -275,8 +343,9 @@ def main(pth):
 
 if __name__ == '__main__':
     
-    from os.path import expanduser, basename, join
+    import sys
     from os import listdir
+    from os.path import expanduser, basename, join
     
     im_directory = expanduser("~/Downloads")
     im_paths = map(
@@ -291,5 +360,6 @@ if __name__ == '__main__':
         print("")
         print("IMAGE: %s" % basename(im_pth))
         main(im_pth)
+        sys.exit(0)
 
 
