@@ -175,13 +175,13 @@ def edge_histo_base64(histobytes):
 
 
 def main(pth):
-    from pylire.compatibility.utils import test
+    from pylire.compatibility.utils import timecheck
     from pylire.process.channels import RGB
     from imread import imread
     
     (R, G, B) = RGB(imread(pth))
     
-    @test
+    @timecheck
     def timetest_naive_edge_histogram(R, G, B):
         edge_histo = edge_histogram(R, G, B)
         print("naive Lire port (string rep):")

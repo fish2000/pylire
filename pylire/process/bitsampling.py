@@ -4,7 +4,7 @@ from __future__ import print_function
 import h5py
 import numpy
 
-from pylire.compatibility.utils import test
+from pylire.compatibility.utils import timecheck
 from os.path import join, dirname
 
 # Best values for PHOG: 3000 results include > 80% true positives
@@ -82,7 +82,7 @@ def histogram_hash(histo):
 def histogram_hash_string(histo):
     return int_to_hex(histogram_hash(histo).astype('int32'))
 
-@test
+@timecheck
 def main():
     """ Display the hash function array (generating it if needed) """
         

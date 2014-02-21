@@ -88,56 +88,63 @@ def oh_base64(histogram):
         )).replace('\n', '')
 
 def main(pth):
-    from pylire.compatibility.utils import test
+    from pylire.compatibility.utils import timecheck
     from pylire.process.channels import RGB
     from imread import imread
     
     (R, G, B) = RGB(imread(pth))
     
-    '''@test
+    '''@timecheck
     def timetest_scalar(R, G, B):
         histogram_keys = opponent_histogram_scalar_keys(R, G, B)
         hh = histogram_normalize(
             histogram_count(
                 histogram_keys))
-        print "vectorized scalar func:"
-        print "%s" % oh_str(h)
-        print "binary hash:"
-        print oh_bithash_str(h)
+        print "\tvectorized scalar func:"
+        print oh_str(h)
         print ""
+        print "\tbinary hash:"
+        print oh_bithash_str(h)
+        print "\t"
+        
+        return hh
     
     timetest_scalar(R, G, B)
     '''
     
-    @test
+    @timecheck
     def timetest_vector(R, G, B):
         histogram_key_vec = opponent_histogram_key_vector_ORIG(R, G, B)
         hh = histogram_normalize(
             histogram_count(
                 histogram_key_vec))
         
-        print "pure-python vector func:"
-        print "%s" % oh_str(hh)
-        print "binary hash:"
-        print oh_bithash_str(hh)
+        print "\tpure-python vector func:"
+        print oh_str(hh)
         print ""
+        print "\tbinary hash:"
+        print oh_bithash_str(hh)
+        print "\t"
         
         return hh
     
     timetest_vector(R, G, B)
     
-    @test
+    @timecheck
     def timetest_vector(R, G, B):
         histogram_key_vec_inline = opponent_histogram_key_vector(R, G, B)
         hh = histogram_normalize(
             histogram_count(
                 histogram_key_vec_inline))
         
-        print "native (inlined and cythonized) vector func:"
-        print "%s" % oh_str(hh)
-        print "binary hash:"
-        print oh_bithash_str(hh)
+        print "\tnative (inlined and cythonized) vector func:"
+        print oh_str(hh)
         print ""
+        print "\tbinary hash:"
+        print oh_bithash_str(hh)
+        print "\t"
+        
+        return hh
         
     timetest_vector(R, G, B)
     
@@ -156,7 +163,7 @@ if __name__ == '__main__':
     
     for im_pth in im_paths:
         
-        print ""
+        #print ""
         print ""
         print "IMAGE: %s" % basename(im_pth)
         main(im_pth)

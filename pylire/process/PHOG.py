@@ -6,6 +6,7 @@ from skimage.filter import canny as skimage_canny
 import numpy
 import math
 
+from pylire.compatibility.utils import print_array_info
 from pylire.process.grayscale import ITU_R_601_2
 
 CANNY_THRESHOLD_LOW = 60.0
@@ -77,18 +78,23 @@ def naive_subphog(X, Y, W, H, grayscale, grayD):
 
 
 def vector_subphog(X, Y, W, H, grayscale, grayD):
-    subhistogram = numpy.zeros(PHOG_BINS, dtype="double")
-    subphog = grayscale[X:(X+W), Y:(Y+H)]
-    bindexfp = ((grayD[X:(X+W), Y:(Y+H)] / numpy.pi + 0.5) * PHOG_BINS).astype('double')
-    binvalues = numpy.where(numpy.floor(bindexfp) == bindexfp,
-        1, bindexfp - numpy.floor(bindexfp))
-    binhighs = numpy.where(numpy.floor(bindexfp) == bindexfp,
-        0, numpy.ceil(bindexfp) - bindexfp)
-    bindexes = binvalues + binhighs
+    from numpy.ma import MaskedArray
     
-    print("BINDEXES:")
-    print(numpy.array2string(bindexes))
-    print("max: %s min: %s" % (numpy.max(bindexes), numpy.min(bindexes)))
+    subhistogram = numpy.zeros(PHOG_BINS, dtype="double")
+    subphog = grayscale[X:(X+W), Y:(Y+H)] < 50
+    bindex = numpy.floor((MaskedArray(grayD, mask=subphog) / numpy.pi + 0.5) * PHOG_BINS).astype('int')
+    # bins = numpy.bincount(numpy.where(bindex == PHOG_BINS, 0, bindex))
+    
+    
+    print_array_info(subphog, title="subphog")
+    print_array_info(bindex, title="bindex")
+    # print_array_info(bins, title="BINS")
+    
+    
+    
+    # print("BINDEXES:")
+    # print(numpy.array_repr(bindexes, max_line_width=200))
+    # print("max: %s min: %s" % (numpy.max(bindexes), numpy.min(bindexes)))
     
     return
     
@@ -179,89 +185,6 @@ def PHOG(R, G, B):
     # grayscale[:, H - 1] = 255
     # grayscale[0, :] = 255
     # grayscale[W - 1, :] = 255
-    # 
-    # for x in xrange(1, W - 1):
-    #     for y in xrange(1, H - 1):
-    #         
-    #         if grayD[x, y] < PI_OVER_EIGHT and grayD[x, y] >= -PI_OVER_EIGHT:
-    #             if grayM[x, y] > grayM[x + 1, y] and grayM[x, y] > grayM[x - 1, y]:
-    #                 #set_canny_pixel(x, y, grayscale, grayM[x, y])
-    #                 if grayM[x, y] > CANNY_THRESHOLD_LOW:
-    #                     grayscale[x, y] = 0
-    #                 elif grayM[x, y] > CANNY_THRESHOLD_HIGH:
-    #                     grayscale[x, y] = 128
-    #                 else:
-    #                     grayscale[x, y] = 255
-    #             else:
-    #                 grayscale[x, y] = 255
-    #         
-    #         elif grayD[x, y] < THREE_PI_OVER_EIGHT and grayD[x, y] >= PI_OVER_EIGHT:
-    #             if grayM[x, y] > grayM[x - 1, y - 1] and grayM[x, y] > grayM[x + 1, y + 1]:
-    #                 #set_canny_pixel(x, y, grayscale, grayM[x, y])
-    #                 if grayM[x, y] > CANNY_THRESHOLD_LOW:
-    #                     grayscale[x, y] = 0
-    #                 elif grayM[x, y] > CANNY_THRESHOLD_HIGH:
-    #                     grayscale[x, y] = 128
-    #                 else:
-    #                     grayscale[x, y] = 255
-    #             else:
-    #                 grayscale[x, y] = 255
-    # 
-    #         elif grayD[x, y] < -THREE_PI_OVER_EIGHT or grayD[x, y] >= THREE_PI_OVER_EIGHT:
-    #             if grayM[x, y] > grayM[x, y + 1] and grayM[x, y] > grayM[x, y - 1]:
-    #                 #set_canny_pixel(x, y, grayscale, grayM[x, y])
-    #                 if grayM[x, y] > CANNY_THRESHOLD_LOW:
-    #                     grayscale[x, y] = 0
-    #                 elif grayM[x, y] > CANNY_THRESHOLD_HIGH:
-    #                     grayscale[x, y] = 128
-    #                 else:
-    #                     grayscale[x, y] = 255
-    #             else:
-    #                 grayscale[x, y] = 255
-    #         
-    #         elif grayD[x, y] < -PI_OVER_EIGHT and grayD[x, y] >= -THREE_PI_OVER_EIGHT:
-    #             if grayM[x, y] > grayM[x + 1, y - 1] and grayM[x, y] > grayM[x - 1, y + 1]:
-    #                 #set_canny_pixel(x, y, grayscale, grayM[x, y])
-    #                 if grayM[x, y] > CANNY_THRESHOLD_LOW:
-    #                     grayscale[x, y] = 0
-    #                 elif grayM[x, y] > CANNY_THRESHOLD_HIGH:
-    #                     grayscale[x, y] = 128
-    #                 else:
-    #                     grayscale[x, y] = 255
-    #             else:
-    #                 grayscale[x, y] = 255
-    #         
-    #         else:
-    #             grayscale[x, y] = 255
-    # 
-    # # "hysteresis ... walk along lines of strong pixels and make the weak ones strong."
-    # for x in xrange(1, W - 1):
-    #     for y in xrange(1, H - 1):
-    #         # track_weak_ones() is tail-call recursive
-    #         grayscale[x, y] < 50 and track_weak_ones(x, y, grayscale)
-    # 
-    # # "removing the single weak pixels." -- as Frank Underwood says,
-    # # "Cleave them from the herd, and watch them die."
-    # for x in xrange(2, W - 2):
-    #     for y in xrange(2, H - 2):
-    #         if grayscale[x, y] > 50:
-    #             grayscale[x, y] = 255
-    # 
-    # print("POST-CANNY:")
-    # print("grayscale:")
-    # print(grayscale)
-    # print("")
-    # print("max(grayscale) = %s" % numpy.max(grayscale))
-    # print("min(grayscale) = %s" % numpy.min(grayscale))
-    # print("average(grayscale) = %s" % numpy.average(grayscale))
-    # print("bincount(grayscale) = %s" % numpy.bincount(grayscale.flatten()))
-    # print("")
-    # 
-    # print("")
-    # print("grayD:")
-    # print(grayD)
-    # print("grayM:")
-    # print(grayM)
     
     grayscale = skimage_canny(grayscale,
         low_threshold=CANNY_THRESHOLD_LOW,
@@ -272,9 +195,6 @@ def PHOG(R, G, B):
     histogram = numpy.zeros(
         PHOG_BINS + 4*PHOG_BINS + 4*4*PHOG_BINS,
         dtype="double")
-    
-    # public static void arraycopy(Object src, int srcPos,
-    #                              Object dest, int destPos, int length)
     
     # "level0"
     vector_subphog(0, 0, W, H, grayscale, grayD)
@@ -325,18 +245,20 @@ def PHOG_bytes(histogram):
     ).astype('byte')
 
 
+
+
 def main(pth):
-    from pylire.compatibility.utils import test
+    from pylire.compatibility.utils import timecheck
     from pylire.process.channels import RGB
     from imread import imread
     
     (R, G, B) = RGB(imread(pth))
     
-    @test
+    @timecheck
     def timetest_naive_PHOG(R, G, B):
         phog = PHOG(R, G, B)
         print("naive Lire port (raw PHOG histo):")
-        print("%s" % phog)
+        print_array_info(phog)
         print("")
     
     timetest_naive_PHOG(R, G, B)
