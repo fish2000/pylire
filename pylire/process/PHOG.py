@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from __future__ import division
 
+from scipy.ndimage import sobel as scipy_sobel
 import numpy
 import math
 
@@ -110,7 +111,13 @@ def naive_sobel(grayscale):
 def PHOG(R, G, B):
     grayscale = ITU_R_601_2(R, G, B)
     (W, H) = grayscale.shape[:2]
-    (sobelX, sobelY) = naive_sobel(grayscale)
+    
+    #(sobelX, sobelY) = naive_sobel(grayscale)
+    sobelX = numpy.zeros((W, H), dtype="double")
+    sobelY = numpy.zeros((W, H), dtype="double")
+    scipy_sobel(grayscale, axis=0, output=sobelX)
+    scipy_sobel(grayscale, axis=1, output=sobelY)
+    
     grayD = numpy.zeros((W, H), dtype="double")
     grayM = numpy.zeros((W, H), dtype="double")
     
@@ -121,7 +128,8 @@ def PHOG(R, G, B):
                 grayD[x, y] = math.atan(sobelY[x, y] / sobelX[x, y])
             else:
                 grayD[x, y] = PI_OVER_TWO
-            grayM[x, y] = math.sqrt(sobelY[x, y]**2 + sobelX[x, y]**2)
+            #grayM[x, y] = math.sqrt(sobelY[x, y]**2 + sobelX[x, y]**2)
+    grayM = numpy.sqrt(numpy.square(sobelY) + numpy.square(sobelX))
     
     # "non-maximum suppression"
     grayscale[:, 0] = 255
@@ -134,25 +142,49 @@ def PHOG(R, G, B):
             
             if grayD[x, y] < PI_OVER_EIGHT and grayD[x, y] >= -PI_OVER_EIGHT:
                 if grayM[x, y] > grayM[x + 1, y] and grayM[x, y] > grayM[x - 1, y]:
-                    set_canny_pixel(x, y, grayscale, grayM[x, y])
+                    #set_canny_pixel(x, y, grayscale, grayM[x, y])
+                    if grayM[x, y] > CANNY_THRESHOLD_LOW:
+                        grayscale[x, y] = 0
+                    elif grayM[x, y] > CANNY_THRESHOLD_HIGH:
+                        grayscale[x, y] = 128
+                    else:
+                        grayscale[x, y] = 255
                 else:
                     grayscale[x, y] = 255
             
             elif grayD[x, y] < THREE_PI_OVER_EIGHT and grayD[x, y] >= PI_OVER_EIGHT:
                 if grayM[x, y] > grayM[x - 1, y - 1] and grayM[x, y] > grayM[x + 1, y + 1]:
-                    set_canny_pixel(x, y, grayscale, grayM[x, y])
+                    #set_canny_pixel(x, y, grayscale, grayM[x, y])
+                    if grayM[x, y] > CANNY_THRESHOLD_LOW:
+                        grayscale[x, y] = 0
+                    elif grayM[x, y] > CANNY_THRESHOLD_HIGH:
+                        grayscale[x, y] = 128
+                    else:
+                        grayscale[x, y] = 255
                 else:
                     grayscale[x, y] = 255
     
             elif grayD[x, y] < -THREE_PI_OVER_EIGHT or grayD[x, y] >= THREE_PI_OVER_EIGHT:
                 if grayM[x, y] > grayM[x, y + 1] and grayM[x, y] > grayM[x, y - 1]:
-                    set_canny_pixel(x, y, grayscale, grayM[x, y])
+                    #set_canny_pixel(x, y, grayscale, grayM[x, y])
+                    if grayM[x, y] > CANNY_THRESHOLD_LOW:
+                        grayscale[x, y] = 0
+                    elif grayM[x, y] > CANNY_THRESHOLD_HIGH:
+                        grayscale[x, y] = 128
+                    else:
+                        grayscale[x, y] = 255
                 else:
                     grayscale[x, y] = 255
             
             elif grayD[x, y] < -PI_OVER_EIGHT and grayD[x, y] >= -THREE_PI_OVER_EIGHT:
                 if grayM[x, y] > grayM[x + 1, y - 1] and grayM[x, y] > grayM[x - 1, y + 1]:
-                    set_canny_pixel(x, y, grayscale, grayM[x, y])
+                    #set_canny_pixel(x, y, grayscale, grayM[x, y])
+                    if grayM[x, y] > CANNY_THRESHOLD_LOW:
+                        grayscale[x, y] = 0
+                    elif grayM[x, y] > CANNY_THRESHOLD_HIGH:
+                        grayscale[x, y] = 128
+                    else:
+                        grayscale[x, y] = 255
                 else:
                     grayscale[x, y] = 255
             
