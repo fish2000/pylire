@@ -67,8 +67,8 @@ def rejar(jarpth, fresh_content_map={}, compression=zipfile.ZIP_DEFLATED):
         raise IOError("No jar: %s" % jarpth)
     
     colored.cyan("Re-jarring '%s' with %d possible replacements:" % (
-        len(fresh_content_map),
-        basename(jarpth)))
+        basename(jarpth),
+        len(fresh_content_map)))
     
     with indent(3, quote=' *'):
         for fresh_key in fresh_content_map.keys():
