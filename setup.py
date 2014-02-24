@@ -28,7 +28,7 @@ except ImportError:
 
 setup(
     name='pylire',
-    version='0.3.2',
+    version='0.3.3',
     description='Python/Cython port of Lire image processing algorithms',
     author='Alexander Bohn',
     author_email='fish2000@gmail.com',
@@ -42,7 +42,8 @@ setup(
     install_requires=[
         'numpy', 'numexpr', 'h5py',
         # 'scipy', 'scikit-image', 'imread',
-        'phyjnius', 'argh', 'clint'],
+        # 'phyjnius',
+        'argh', 'clint'],
     
     packages=[
         'pylire',
