@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# encoding: utf-8
+# -*- coding: utf-8 -*-
 
 from __future__ import print_function
 
@@ -7,6 +7,7 @@ import zipfile
 import tempfile
 import pylire
 import shutil
+import sys
 
 from clint.textui import progress, colored
 from clint.textui import indent
@@ -124,7 +125,7 @@ def setup_jvm():
         jarpath('lire.jar'),
     ])
     
-    javasys.setProperty(amended_cp)
+    javasys.setProperty('java.class.path', amended_cp)
     
     colored.cyan("Classpath (amended):")
     colored.cyan(amended_cp)
@@ -170,9 +171,9 @@ def inject(args):
         })
     return
 
-    
 
-def main(*arguments):
+def main(*argv):
+    arguments = list(argv and argv or sys.argv[1:])
     parser = ArghParser()
     parser.add_commands([write, inject])
     #parser.set_default_command(write)
