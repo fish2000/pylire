@@ -12,7 +12,7 @@ import sys
 from clint.textui import progress, colored
 from clint.textui import puts, indent
 from argh import ArghParser, arg
-from os.path import join, dirname, basename, isfile
+from os.path import join, dirname, basename, isfile, unlink
 
 _copy = shutil.copy2
 
@@ -33,6 +33,9 @@ def oort(oortpath, jnius):
     from pylire.process.bitsampling import NUM_BITS, NUM_DIMENSIONS, NUM_FUNCTION_BUNDLES
     
     puts(colored.cyan("Writing HDF5 data to ObjectOutputStream..."))
+    
+    if isfile(oortpath):
+        unlink(oortpath)
     
     oortcloud = ObjectOutputStream(
         GZIPOutputStream(
