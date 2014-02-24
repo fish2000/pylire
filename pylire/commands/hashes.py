@@ -12,7 +12,8 @@ import sys
 from clint.textui import progress, colored
 from clint.textui import puts, indent
 from argh import ArghParser, arg
-from os.path import join, dirname, basename, isfile, unlink
+from os.path import join, dirname, basename, isfile
+from os import unlink
 
 _copy = shutil.copy2
 
