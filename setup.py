@@ -28,7 +28,7 @@ except ImportError:
 
 setup(
     name='pylire',
-    version='0.2.8',
+    version='0.2.9',
     description='Python/Cython port of Lire image processing algorithms',
     author='Alexander Bohn',
     author_email='fish2000@gmail.com',
