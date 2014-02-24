@@ -12,6 +12,7 @@ stdout
 .DS_Store
 .password
 MANIFEST.in
+.tm_properties
 
 *.aof
 *.rdb
