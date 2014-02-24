@@ -14,13 +14,7 @@ from clint.textui import puts, indent
 from argh import ArghParser, arg
 from os.path import join, dirname, basename, isfile
 
-try:
-    import macostools
-except ImportError:
-    _copy = shutil.copy2
-else:
-    _copy = macostools.copy
-
+_copy = shutil.copy2
 
 def jarpath(jar):
     pth = join(
