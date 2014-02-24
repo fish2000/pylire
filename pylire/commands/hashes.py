@@ -150,7 +150,7 @@ def inject(args):
         raise IOError("You must specify a *.jar archive for hash injection")
     if args.FILE is None:
         args.FILE = "/tmp/LshBitSampling.obj"
-    if isfile(args.FILE):
+    elif isfile(args.FILE):
         raise IOError("File already exists: %s" % args.FILE)
     
     jnius = setup_jvm()
