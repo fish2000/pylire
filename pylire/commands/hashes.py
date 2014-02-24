@@ -47,13 +47,13 @@ def oort(oortpath, jnius):
     oortcloud.writeInt(NUM_DIMENSIONS)
     oortcloud.writeInt(NUM_FUNCTION_BUNDLES)
     
-    with indent(4, quote='+ '):
+    with indent(3, quote='+ '):
         puts(colored.red("(int) NUM_BITS: %d" % NUM_BITS))
         puts(colored.red("(int) NUM_DIMENSIONS: %d" % NUM_DIMENSIONS))
         puts(colored.red("(int) NUM_FUNCTION_BUNDLES: %d" % NUM_FUNCTION_BUNDLES))
     
         for floatval in progress.bar(BITS.flatten(),
-            label=colored.red("(float) BITS")):
+            label=colored.red(" (float) BITS")):
             oortcloud.writeFloat(floatval)
     
     oortcloud.flush()
@@ -153,9 +153,7 @@ def inject(args):
     if args.JAR is None:
         raise IOError("You must specify a *.jar archive for hash injection")
     if args.FILE is None:
-        args.FILE = "/tmp/LshBitSampling.obj"
-    elif isfile(args.FILE):
-        raise IOError("File already exists: %s" % args.FILE)
+        raise IOError("You must specify an output file")
     
     jnius = setup_jvm()
     oort(args.FILE, jnius)
@@ -174,7 +172,6 @@ def main(*argv):
     arguments = list(argv and argv or sys.argv[1:])
     parser = ArghParser()
     parser.add_commands([write, inject])
-    #parser.set_default_command(write)
     parser.dispatch(argv=list(arguments))
     return 0
 
