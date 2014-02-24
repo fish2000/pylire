@@ -10,7 +10,7 @@ import shutil
 import sys
 
 from clint.textui import progress, colored
-from clint.textui import indent
+from clint.textui import puts, indent
 from argh import ArghParser, arg
 from os.path import join, dirname, basename, isfile
 
@@ -38,7 +38,7 @@ def oort(oortpath, jnius):
     from pylire.process.bitsampling import BITS
     from pylire.process.bitsampling import NUM_BITS, NUM_DIMENSIONS, NUM_FUNCTION_BUNDLES
     
-    colored.cyan("Writing HDF5 data to ObjectOutputStream...")
+    puts(colored.cyan("Writing HDF5 data to ObjectOutputStream..."))
     
     oortcloud = ObjectOutputStream(
         GZIPOutputStream(
@@ -50,9 +50,9 @@ def oort(oortpath, jnius):
     oortcloud.writeInt(NUM_FUNCTION_BUNDLES)
     
     with indent(4, quote='+ '):
-        colored.red("(int) NUM_BITS: %d" % NUM_BITS)
-        colored.red("(int) NUM_DIMENSIONS: %d" % NUM_DIMENSIONS)
-        colored.red("(int) NUM_FUNCTION_BUNDLES: %d" % NUM_FUNCTION_BUNDLES)
+        puts(colored.red("(int) NUM_BITS: %d" % NUM_BITS))
+        puts(colored.red("(int) NUM_DIMENSIONS: %d" % NUM_DIMENSIONS))
+        puts(colored.red("(int) NUM_FUNCTION_BUNDLES: %d" % NUM_FUNCTION_BUNDLES))
     
         for floatval in progress.bar(BITS.flatten(),
             label=colored.red("(float) BITS")):
@@ -66,13 +66,13 @@ def rejar(jarpth, fresh_content_map={}, compression=zipfile.ZIP_DEFLATED):
     if not isfile(jarpth):
         raise IOError("No jar: %s" % jarpth)
     
-    colored.cyan("Re-jarring '%s' with %d possible replacements:" % (
+    puts(colored.cyan("Re-jarring '%s' with %d possible replacements:" % (
         basename(jarpth),
-        len(fresh_content_map)))
+        len(fresh_content_map))))
     
     with indent(3, quote=' *'):
         for fresh_key in fresh_content_map.keys():
-            colored.cyan(fresh_key)
+            puts(colored.cyan(fresh_key))
     
     print()
     
@@ -86,9 +86,9 @@ def rejar(jarpth, fresh_content_map={}, compression=zipfile.ZIP_DEFLATED):
             "Re-jar: %s" % basename(jarpth))):
         replace = basename(item.filename) in fresh_content_map
         content = replace \
-            and fresh_content_map[item.filename] \
+            and fresh_content_map[basename(item.filename)] \
             or oldjar.read(item.filename)
-        replace and colored.yellow("Replaced %s" % item.filename)
+        replace and puts(colored.yellow("Replaced %s" % item.filename))
         newjar.writestr(item, content)
     
     print ()
@@ -102,12 +102,12 @@ def rejar(jarpth, fresh_content_map={}, compression=zipfile.ZIP_DEFLATED):
     newjar.close()
     _copy(newjarpth, oldjarpth)
     
-    colored.yellow("Finished restructuring jar: %s" % oldjarpth)
+    puts(colored.yellow("Finished restructuring jar: %s" % oldjarpth))
     print()
 
 
 def setup_jvm():
-    colored.yellow("Starting JVM...")
+    puts(colored.yellow("Starting JVM..."))
     print()
     
     import jnius
@@ -115,8 +115,8 @@ def setup_jvm():
     javasys = jnius.autoclass('java.lang.System')
     classpath = javasys.getProperty('java.class.path')
     
-    colored.cyan("Classpath:")
-    colored.cyan(classpath)
+    puts(colored.cyan("Classpath:"))
+    puts(colored.cyan(classpath))
     print()
     
     amended_cp = ":".join([
@@ -127,8 +127,8 @@ def setup_jvm():
     
     javasys.setProperty('java.class.path', amended_cp)
     
-    colored.cyan("Classpath (amended):")
-    colored.cyan(amended_cp)
+    puts(colored.cyan("Classpath (amended):"))
+    puts(colored.cyan(amended_cp))
     print()
     
     return jnius
