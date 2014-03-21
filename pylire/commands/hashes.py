@@ -89,7 +89,7 @@ def rejar(jarpth, fresh_content_map={}, compression=zipfile.ZIP_DEFLATED):
         replace and puts(colored.yellow("Replaced %s" % item.filename))
         newjar.writestr(item, content)
     
-    print ()
+    print()
     oldjarpth = oldjar.filename
     newjarpth = newjar.filename
     oldjar.testzip()

@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-import jnius
+#import jnius
+from pylire.commands.hashes import setup_jvm
+jnius = setup_jvm()
 
 ColorLayout = jnius.autoclass('net.semanticmetadata.lire.imageanalysis.ColorLayout')
 EdgeHistogram = jnius.autoclass('net.semanticmetadata.lire.imageanalysis.EdgeHistogram')
