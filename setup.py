@@ -15,6 +15,13 @@ def cython_module(*args):
 def cython_ext(name):
     return cython_module('pylire', 'process', 'ext', name)
 
+def console_script(command_name, module_pth, func_name='main', command_prefix='pylire'):
+    if not command_prefix:
+        raise ValueError(
+            "console_script() requires a non-False-y command_prefix argument")
+    return "%s-%s = %s:%s" % (
+        command_prefix, command_name, module_pth, func_name)
+
 from Cython.Distutils import build_ext
 from distutils.sysconfig import get_python_inc
 
@@ -66,9 +73,9 @@ setup(
     
     entry_points={
         'console_scripts': [
-            'pylire-hashes = pylire.commands.hashes:main',
-            'pylire-tests-jnius = pylire.compatibility.tests_jnius:main',
-            'pylire-tests-jython = pylire.compatibility.tests_jython:main',
+            console_script('hashes', 'pylire.commands.hashes'),
+            console_script('tests-jnius', 'pylire.compatibility.tests_jnius'),
+            console_script('tests-jython', 'pylire.compatibility.tests_jython'),
         ],
     },
     
