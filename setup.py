@@ -28,7 +28,7 @@ except ImportError:
 
 setup(
     name='pylire',
-    version='0.3.5',
+    version='0.3.6',
     description='Python/Cython port of Lire image processing algorithms',
     author='Alexander Bohn',
     author_email='fish2000@gmail.com',
@@ -66,7 +66,9 @@ setup(
     
     entry_points={
         'console_scripts': [
-            'java-hashes = pylire.commands.hashes:main'
+            'pylire-hashes = pylire.commands.hashes:main',
+            'pylire-tests-jnius = pylire.compatibility.tests_jnius:main',
+            'pylire-tests-jython = pylire.compatibility.tests_jython:main',
         ],
     },
     
