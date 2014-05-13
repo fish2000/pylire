@@ -18,7 +18,7 @@ def cython_ext(name):
 def console_script(command_name, module_pth, func_name='main', command_prefix='pylire'):
     if not command_prefix:
         raise ValueError(
-            "console_script() requires a non-False-y command_prefix argument")
+                "console_script() requires a non-False-y command_prefix argument")
     return "%s-%s = %s:%s" % (
         command_prefix, command_name, module_pth, func_name)
 
