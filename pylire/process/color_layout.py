@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+from __future__ import division, print_function
 
 import numpy
 import numexpr
@@ -50,13 +52,15 @@ def coords(ndim):
     return coords_yx(*ndim.shape[:2])
 
 def k_coords(height, width):
-    (y_axis, x_axis) = coords_yx(height, width).T
+    (x_axis, y_axis) = coords_yx(height, width).T
     return (y_axis.T << 3) + x_axis.T
 
 def k_map(ndim):
-    (y_axis, x_axis) = coords(ndim).T
-    y_axis /= (y_axis.shape[0] * 0.125)
-    x_axis /= (x_axis.shape[1] * 0.125)
+    coordinates = coords(ndim)
+    (y, x) = coordinates.shape[:2]
+    (x_axis, y_axis) = coordinates.T
+    x_axis /= (x * 0.125)
+    y_axis /= (y * 0.125)
     return (y_axis.T << 3) + x_axis.T
 
 def quant_ydc(ints):
@@ -84,37 +88,75 @@ where(abs(ints) > 63, 32 + ((abs(ints)) >> 2), abs(ints)
     signed = numexpr.evaluate("where(ints < 0, -1, 1)")
     return (out * signed) + 128
 
-def create_shape_from_RGB_image(ndim):
+def shape_from_image(ndim):
+    """ Return a 'shape' square for a given RGB image.
+        
+        The shape square is a 64x3 array, filled the per-channel average values
+        of the images' spatially quantized YCbCr pixel data.
+    """
     Shape = numpy.zeros((64, 3), dtype="int")
-    # total = numpy.zeros((3, 64), dtype="long")
-    # (Y, Cb, Cr) = 
-    
     KMap = k_map(ndim)
     kflat = KMap.flatten()
     kmax = numpy.max(kflat)
     
     KCounts = numpy.bincount(kflat)
-    KChannelSums = numpy.ndarray((kmax+1, 3), dtype="int")
+    KChannelSums = numpy.ndarray((KCounts.shape[0], 3), dtype="int")
     
-    # KSums = dict(
-    #    sY=numpy.ndarray(Y.shape, dtype="uint"),
-    #     sCb=numpy.ndarray(Cb.shape, dtype="uint"),
-    #     sCr=numpy.ndarray(Cr.shape, dtype="uint"))
+    print("KCounts:")
+    print(KCounts)
+    print("KChannelSums:")
+    print(KChannelSums)
     
     for kidx in xrange(kmax):
         for channel_idx, channel in enumerate(YCbCr(ndim)):
             KChannelSums[kidx, channel_idx] = numpy.sum(numpy.ma.masked_where(KMap == kidx, channel))
-        if kidx == 0:
+        if KCounts[kidx] == 0:
             continue
         Shape[kidx] = (KChannelSums[kidx] / KCounts[kidx]).astype('int')
     
-    '''
-    for kidx in k_coords(8, 8).flatten():
-        KChannelSums[kidx, 1] = numpy.sum(numpy.ma.masked_where(KMap == kidx, Cb))
-        KChannelSums[kidx, 2] = numpy.sum(numpy.ma.masked_where(KMap == kidx, Cr))
-    '''
+    return Shape
+
+
+def main(pth):
+    from pylire.compatibility.utils import timecheck
+    from imread import imread
     
+    ndim = imread(pth)
     
+    @timecheck
+    def timetest_naive_edge_histogram(ndim):
+        shape = shape_from_image(ndim)
+        print("image shape:")
+        print(ndim.shape)
+        print("")
+        print("image 'shape':")
+        print(shape)
+        print("")
+    
+    timetest_naive_edge_histogram(ndim)
+
+
+if __name__ == '__main__':
+    
+    from os.path import expanduser, basename, join
+    from os import listdir
+    
+    im_directory = expanduser("~/Downloads")
+    im_paths = map(
+        lambda name: join(im_directory, name),
+        filter(
+            lambda name: name.lower().endswith('jpg'),
+            listdir(im_directory)))
+    
+    for im_pth in im_paths:
+        
+        print("")
+        print("")
+        print("IMAGE: %s" % basename(im_pth))
+        main(im_pth)
+
+
+
     
     
     
