@@ -8,7 +8,7 @@ import numpy
 from pprint import pformat
 from functools import wraps
 
-BREAKER = 98
+BREAKER = 60
 CODEC = 'iso-8859-1'
 
 def print_array_info(in_array, title=None):

@@ -6,6 +6,10 @@ import numexpr
 
 from pylire.process.channels import YCbCr
 
+SHAPE_WIDTH = 8
+SHAPE_HEIGHT = 8
+SHAPE_SIZE = SHAPE_WIDTH * SHAPE_HEIGHT
+
 zigzag = numpy.array([
     0, 1, 8, 16, 9, 2, 3, 10, 17, 24, 32, 25, 18, 11, 4, 5,
     12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13, 6, 7, 14, 21, 28,
@@ -57,7 +61,7 @@ def k_coords(height, width):
 
 def k_map(ndim):
     coordinates = coords(ndim)
-    (y, x) = coordinates.shape[:2]
+    (y, x) = ndim.shape[:2]
     (x_axis, y_axis) = coordinates.T
     x_axis /= (x * 0.125)
     y_axis /= (y * 0.125)
@@ -94,22 +98,24 @@ def shape_from_image(ndim):
         The shape square is a 64x3 array, filled the per-channel average values
         of the images' spatially quantized YCbCr pixel data.
     """
-    Shape = numpy.zeros((64, 3), dtype="int")
+    Shape = numpy.zeros((SHAPE_SIZE, 3), dtype="int")
     KMap = k_map(ndim)
     kflat = KMap.flatten()
     kmax = numpy.max(kflat)
     
-    KCounts = numpy.bincount(kflat)
+    KCounts = numpy.bincount(kflat, minlength=SHAPE_SIZE)
     KChannelSums = numpy.ndarray((KCounts.shape[0], 3), dtype="int")
     
-    print("KCounts:")
-    print(KCounts)
-    print("KChannelSums:")
-    print(KChannelSums)
+    # print("KCounts (len = %s):" % len(KCounts))
+    # print(KCounts)
+    # print("KChannelSums:")
+    # print(KChannelSums)
     
     for kidx in xrange(kmax):
         for channel_idx, channel in enumerate(YCbCr(ndim)):
             KChannelSums[kidx, channel_idx] = numpy.sum(numpy.ma.masked_where(KMap == kidx, channel))
+    
+    for kidx in k_coords(SHAPE_WIDTH, SHAPE_HEIGHT).T.flatten():
         if KCounts[kidx] == 0:
             continue
         Shape[kidx] = (KChannelSums[kidx] / KCounts[kidx]).astype('int')
@@ -124,7 +130,7 @@ def main(pth):
     ndim = imread(pth)
     
     @timecheck
-    def timetest_naive_edge_histogram(ndim):
+    def timetest_color_layout_shape(ndim):
         shape = shape_from_image(ndim)
         print("image shape:")
         print(ndim.shape)
@@ -133,7 +139,7 @@ def main(pth):
         print(shape)
         print("")
     
-    timetest_naive_edge_histogram(ndim)
+    timetest_color_layout_shape(ndim)
 
 
 if __name__ == '__main__':
