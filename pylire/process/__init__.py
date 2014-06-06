@@ -1,8 +1,9 @@
 
 from __future__ import print_function
 
-from pkgutil import extend_path
-__path__ = extend_path(__path__, __name__)
+if '__path__' in locals():
+    from pkgutil import extend_path
+    __path__ = extend_path(__path__, __name__)
 
 from importlib import import_module
 from functools import wraps

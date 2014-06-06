@@ -18,7 +18,7 @@ def cython_ext(name):
 def console_script(command_name, module_pth, func_name='main', command_prefix='pylire'):
     if not command_prefix:
         raise ValueError(
-                "console_script() requires a non-False-y command_prefix argument")
+            "console_script() requires a non-False-y command_prefix argument")
     return "%s-%s = %s:%s" % (
         command_prefix, command_name, module_pth, func_name)
 
@@ -35,7 +35,7 @@ except ImportError:
 
 setup(
     name='pylire',
-    version='0.3.6',
+    version='0.3.7',
     description='Python/Cython port of Lire image processing algorithms',
     author='Alexander Bohn',
     author_email='fish2000@gmail.com',
@@ -86,8 +86,7 @@ setup(
     cmdclass=dict(build_ext=build_ext),
     include_dirs=[
         numpy.get_include(),
-        get_python_inc(plat_specific=1),
-        "."],
+        get_python_inc(plat_specific=1)],
     
     classifiers=[
         'Development Status :: 4 - Beta',
