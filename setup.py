@@ -10,7 +10,8 @@ except ImportError:
 def cython_module(*args):
     ext_package = ".".join(args)
     ext_pth = "/".join(args) + ".pyx"
-    return Extension(ext_package, [ext_pth])
+    return Extension(ext_package, [ext_pth],
+        extra_compile_args=["-Wno-unused-function"])
 
 def cython_ext(name):
     return cython_module('pylire', 'process', 'ext', name)
