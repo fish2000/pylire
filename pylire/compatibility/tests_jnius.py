@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from jnius import JavaClass, MetaJavaClass, JavaMethod
 from pylire.commands.hashes import setup_jvm
 jnius = setup_jvm()
 
@@ -9,8 +10,13 @@ PHOG = jnius.autoclass('net.semanticmetadata.lire.imageanalysis.PHOG')
 OpponentHistogram = jnius.autoclass('net.semanticmetadata.lire.imageanalysis.OpponentHistogram')
 JCD = jnius.autoclass('net.semanticmetadata.lire.imageanalysis.JCD')
 Base64 = jnius.autoclass('org.apache.commons.codec.binary.Base64')
-ImageIO = jnius.autoclass('javax.imageio.ImageIO')
+#ImageIO = jnius.autoclass('javax.imageio.ImageIO')
 File = jnius.autoclass('java.io.File')
+
+class ImageIO(JavaClass):
+    __metaclass__ = MetaJavaClass
+    __javaclass__ = 'javax/imageio/ImageIO'
+    read = JavaMethod('(Ljava/io/File;)Ljava/awt/image/BufferedImage;')
 
 
 def test_color_layout(im):

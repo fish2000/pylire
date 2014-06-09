@@ -119,6 +119,8 @@ def setup_jvm():
     
     amended_cp = ":".join([
         classpath,
+        jarpath('ae-awt.jar'),
+        jarpath('javax-imageio.jar'),
         jarpath('commons-codec-1.9.jar'),
         jarpath('lire.jar'),
     ])
