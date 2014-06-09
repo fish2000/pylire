@@ -35,7 +35,7 @@ except ImportError:
 
 setup(
     name='pylire',
-    version='0.3.7',
+    version='0.3.8',
     description='Python/Cython port of Lire image processing algorithms',
     author='Alexander Bohn',
     author_email='fish2000@gmail.com',
@@ -80,6 +80,7 @@ setup(
     },
     
     ext_modules=[
+        cython_ext("channels"),
         cython_ext("grayscale"),
         cython_ext("opponent_histogram")],
     

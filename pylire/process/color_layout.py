@@ -94,7 +94,7 @@ where(abs(ints) > 63, 32 + ((abs(ints)) >> 2), abs(ints)
 
 def shape_from_image(ndim):
     """ Return a 'shape' square for a given RGB image.
-        
+
         The shape square is a 64x3 array, filled the per-channel average values
         of the images' spatially quantized YCbCr pixel data.
     """
@@ -102,33 +102,33 @@ def shape_from_image(ndim):
     KMap = k_map(ndim)
     kflat = KMap.flatten()
     kmax = numpy.max(kflat)
-    
+
     KCounts = numpy.bincount(kflat, minlength=SHAPE_SIZE)
     KChannelSums = numpy.ndarray((KCounts.shape[0], 3), dtype="int")
-    
+
     # print("KCounts (len = %s):" % len(KCounts))
     # print(KCounts)
     # print("KChannelSums:")
     # print(KChannelSums)
-    
+
     for kidx in xrange(kmax):
         for channel_idx, channel in enumerate(YCbCr(ndim)):
             KChannelSums[kidx, channel_idx] = numpy.sum(numpy.ma.masked_where(KMap == kidx, channel))
-    
+
     for kidx in k_coords(SHAPE_WIDTH, SHAPE_HEIGHT).T.flatten():
         if KCounts[kidx] == 0:
             continue
         Shape[kidx] = (KChannelSums[kidx] / KCounts[kidx]).astype('int')
-    
+
     return Shape
 
 
 def main(pth):
     from pylire.compatibility.utils import timecheck
     from imread import imread
-    
+
     ndim = imread(pth)
-    
+
     @timecheck
     def timetest_color_layout_shape(ndim):
         shape = shape_from_image(ndim)
@@ -138,31 +138,25 @@ def main(pth):
         print("image 'shape':")
         print(shape)
         print("")
-    
+
     timetest_color_layout_shape(ndim)
 
 
 if __name__ == '__main__':
-    
+
     from os.path import expanduser, basename, join
     from os import listdir
-    
+
     im_directory = expanduser("~/Downloads")
     im_paths = map(
         lambda name: join(im_directory, name),
         filter(
             lambda name: name.lower().endswith('jpg'),
             listdir(im_directory)))
-    
-    for im_pth in im_paths:
-        
+
+    for im_pth in im_paths[:5]:
+
         print("")
         print("")
         print("IMAGE: %s" % basename(im_pth))
         main(im_pth)
-
-
-
-    
-    
-    
