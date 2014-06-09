@@ -68,10 +68,6 @@ setup(
         ],
     },
     
-    scripts={
-        'bin/jython-pylire': 'jython-pylire',
-    },
-    
     entry_points={
         'console_scripts': [
             console_script('hashes', 'pylire.commands.hashes'),

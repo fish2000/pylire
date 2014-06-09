@@ -1,4 +1,4 @@
-#!/usr/bin/env jython-pylire
+#!/usr/bin/env jython
 
 from net.semanticmetadata.lire.imageanalysis import ColorLayout
 from net.semanticmetadata.lire.imageanalysis import EdgeHistogram
