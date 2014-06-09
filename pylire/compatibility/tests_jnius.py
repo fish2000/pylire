@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-#import jnius
 from pylire.commands.hashes import setup_jvm
 jnius = setup_jvm()
 
@@ -15,28 +14,34 @@ File = jnius.autoclass('java.io.File')
 
 
 def test_color_layout(im):
-
+    print ""
     print "Color Layout:"
     colorlay = ColorLayout()
     colorlay.extract(im)
     print colorlay.getStringRepresentation()
+    print Base64.encodeBase64String(
+        colorlay.getByteArrayRepresentation())
 
 def test_edge_histogram(im):
-    
+    print ""
     print "Edge Histogram:"
     edgehist = EdgeHistogram()
     edgehist.extract(im)
     print edgehist.getStringRepresentation()
+    print Base64.encodeBase64String(
+        edgehist.getByteArrayRepresentation())
 
 def test_PHOG(im):
-
+    print ""
     print "PHOG:"
     phog = PHOG()
     phog.extract(im)
     print phog.getStringRepresentation()
+    print Base64.encodeBase64String(
+        phog.getByteArrayRepresentation())
 
 def test_opponent_histogram(im):
-
+    print ""
     print "Opponent Histogram:"
     opphist = OpponentHistogram()
     opphist.extract(im)
@@ -45,15 +50,15 @@ def test_opponent_histogram(im):
         opphist.getByteArrayRepresentation())
 
 def test_JCD(im):
-
+    print ""
     print "JCD:"
     jcd = JCD()
     jcd.extract(im)
     print jcd.getStringRepresentation()
+    print Base64.encodeBase64String(
+        jcd.getByteArrayRepresentation())
 
 def main():
-    # im_pth = "/Users/fish/Downloads/5717314638_2340739e06_b.jpg"
-    
     from os.path import expanduser, basename, join
     from os import listdir
     
@@ -65,16 +70,16 @@ def main():
             listdir(im_directory)))
     
     for im_pth in im_paths:
-        
         im = ImageIO.read(File(im_pth))
-        
         print ""
+        print "-" * 120
         print "IMAGE: %s" % basename(im_pth)
         test_color_layout(im)
         test_edge_histogram(im)
         #test_PHOG(im)
         test_opponent_histogram(im)
         #test_JCD(im)
+        print "-" * 120
 
 if __name__ == "__main__":
     main()
