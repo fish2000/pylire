@@ -168,7 +168,7 @@ def json_encoded_values(im_paths):
             #       test_JCD(im, silence=True))),
         ))
     
-    print json.dumps(list_of_dicts)
+    print json.dumps(list_of_dicts, indent=4)
 
 
 if __name__ == "__main__":
