@@ -98,6 +98,8 @@ def shape_from_image(ndim):
         The shape square is a 64x3 array, filled the per-channel average values
         of the images' spatially quantized YCbCr pixel data.
     """
+    ycbcr = YCbCr(ndim)
+
     Shape = numpy.zeros((SHAPE_SIZE, 3), dtype="int")
     KMap = k_map(ndim)
     kflat = KMap.flatten()
@@ -112,7 +114,7 @@ def shape_from_image(ndim):
     # print(KChannelSums)
 
     for kidx in xrange(kmax):
-        for channel_idx, channel in enumerate(YCbCr(ndim)):
+        for channel_idx, channel in enumerate(ycbcr):
             KChannelSums[kidx, channel_idx] = numpy.sum(numpy.ma.masked_where(KMap == kidx, channel))
 
     for kidx in k_coords(SHAPE_WIDTH, SHAPE_HEIGHT).T.flatten():
