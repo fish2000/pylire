@@ -190,9 +190,9 @@ def main(pth):
         print("image shape:")
         print(ndim.shape)
         print("")
-        print("image 'shape':")
-        print(shape)
-        print("")
+        # print("image 'shape':")
+        # print(shape)
+        # print("")
         print("image 'shape' shape:")
         print(shape.shape)
         print("")
@@ -202,7 +202,7 @@ def main(pth):
     @timecheck
     def timetest_color_layout(ndim):
         (cY, cCb, cCr) = color_layout(ndim)
-        print("")
+        # print("")
         # print(cY)
         # print(cCb)
         # print(cCr)
