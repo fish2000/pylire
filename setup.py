@@ -79,6 +79,7 @@ setup(
     ext_modules=[
         cython_ext("channels"),
         cython_ext("grayscale"),
+        cython_ext("color_layout"),
         cython_ext("opponent_histogram")],
     
     cmdclass=dict(build_ext=build_ext),

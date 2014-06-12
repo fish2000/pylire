@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 from __future__ import division, print_function
+#from math import floor
 
 import numpy
 import numexpr
 
+from pylire.process import external
 from pylire.process.channels import YCbCr
 from pylire.process.bitsampling import histogram_hash, histogram_hash_string
 
@@ -13,6 +15,7 @@ SHAPE_SIZE = SHAPE_WIDTH * SHAPE_HEIGHT
 
 NUM_Y = 21
 NUM_C = 6
+ROUND_FACTOR = 0.499999
 
 zigzag = numpy.array([
     0, 1, 8, 16, 9, 2, 3, 10, 17, 24, 32, 25, 18, 11, 4, 5,
@@ -47,7 +50,7 @@ cosine = numpy.array([
         9.754516e-02, -2.777851e-01, 4.157348e-01, -4.903926e-01,
         4.903926e-01, -4.157348e-01, 2.777851e-01, -9.754516e-02
     ]
-], dtype="double")
+], dtype="float64")
 
 def coords_yx(height, width):
     return numpy.swapaxes(
@@ -99,8 +102,29 @@ where(nints > 63, 32 + ((nints) >> 2), nints
         return None
     return (out * signed) + 128
 
-def fdct(shape):
-    pass
+#@external
+def FDCT(shape_plane):
+    """ FDCT -- 'Fast' Discrete Cosine Transform,
+        performed in-place on a 1D shape plane of length 64.
+        ... This is the naively-ported logic straight from Lire:
+            http://git.io/naive-fdct """
+    dct = numpy.zeros_like(shape_plane, dtype='float64')
+    
+    for i in xrange(8):
+        for j in xrange(8):
+            s = 0.0
+            for k in xrange(8):
+                s += cosine[j, k] * shape_plane[8 * i + k]
+            dct[8 * i + j] = s
+    
+    for i in xrange(8):
+        for j in xrange(8):
+            s = 0.0
+            for k in xrange(8):
+                s += cosine[i, k] * dct[8 * k + j]
+            shape_plane[8 * i + j] = int(s + ROUND_FACTOR)
+
+C_FDCT = external(FDCT)
 
 def shape_from_image(ndim):
     """ Return a 'shape' square for a given RGB image.
@@ -125,12 +149,13 @@ def shape_from_image(ndim):
 
     for kidx in xrange(kmax):
         for channel_idx, channel in enumerate(ycbcr):
-            KChannelSums[kidx, channel_idx] = numpy.sum(numpy.ma.masked_where(KMap == kidx, channel))
+            KChannelSums[kidx, channel_idx] = numpy.sum(
+                numpy.ma.masked_where(KMap == kidx, channel))
 
     for kidx in k_coords(SHAPE_WIDTH, SHAPE_HEIGHT).T.flatten():
         if KCounts[kidx] == 0:
             continue
-        Shape[kidx] = (KChannelSums[kidx] / KCounts[kidx]).astype('int')
+        Shape[kidx] = (KChannelSums[kidx] // KCounts[kidx]).astype('int')
 
     return Shape.T
 
@@ -140,9 +165,9 @@ def color_layout(ndim):
     CbCoeff = numpy.zeros((64,), dtype="int")
     CrCoeff = numpy.zeros((64,), dtype="int")
     
-    fdct(shape.T[0].T) # or something
-    fdct(shape.T[1].T)
-    fdct(shape.T[2].T)
+    FDCT(shape[0])
+    FDCT(shape[1])
+    FDCT(shape[2])
     
     # print("ZIGZAG:")
     # print(shape[0][zigzag] >> 1)
@@ -183,6 +208,32 @@ def main(pth):
     from imread import imread
 
     ndim = imread(pth)
+    #ndim_shape = shape_from_image(ndim)
+
+    @timecheck
+    def timetest_FDCT_python(ndim_shape):
+        FDCT(ndim_shape[0])
+        FDCT(ndim_shape[1])
+        FDCT(ndim_shape[2])
+        #print(ndim_shape)
+        return ndim_shape
+
+    @timecheck
+    def timetest_FDCT_cython(ndim_shape):
+        C_FDCT(ndim_shape[0])
+        C_FDCT(ndim_shape[1])
+        C_FDCT(ndim_shape[2])
+        #print(ndim_shape)
+        return ndim_shape
+
+    ns1 = shape_from_image(ndim)
+    out_py = timetest_FDCT_python(ns1)
+    ns2 = shape_from_image(ndim)
+    out_cy = timetest_FDCT_cython(ns2)
+    print("")
+    print("RESULTS EQUAL:")
+    print(numpy.equal(out_py, out_cy))
+    print("")
 
     @timecheck
     def timetest_color_layout_shape(ndim):
@@ -197,7 +248,7 @@ def main(pth):
         print(shape.shape)
         print("")
 
-    timetest_color_layout_shape(ndim)
+    #timetest_color_layout_shape(ndim)
 
     @timecheck
     def timetest_color_layout(ndim):
@@ -207,7 +258,7 @@ def main(pth):
         # print(cCb)
         # print(cCr)
 
-    timetest_color_layout(ndim)
+    #timetest_color_layout(ndim)
 
 if __name__ == '__main__':
 
@@ -221,7 +272,7 @@ if __name__ == '__main__':
             lambda name: name.lower().endswith('jpg'),
             listdir(im_directory)))
 
-    for im_pth in im_paths[:5]:
+    for im_pth in im_paths:
 
         print("")
         print("")
