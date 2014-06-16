@@ -4,9 +4,6 @@ import numpy
 cimport numpy
 cimport cython
 
-#from libc.math cimport floor
-
-# INT = numpy.int
 FLOAT64 = numpy.float64
 
 ctypedef numpy.int_t INT_t
