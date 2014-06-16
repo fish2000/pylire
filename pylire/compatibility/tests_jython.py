@@ -52,7 +52,7 @@ def test_PHOG(im, silence=False):
     phog = PHOG()
     phog.extract(im)
     return (
-        phog.getStringRepresentation(),
+        "n/a", # phog.getStringRepresentation()
         Base64.encodeBase64String(
             phog.getByteArrayRepresentation()),
         ParallelSolrIndexer.arrayToString(
@@ -83,7 +83,7 @@ def test_JCD(im, silence=False):
     jcd = JCD()
     jcd.extract(im)
     return (
-        jcd.getStringRepresentation(),
+        "n/a", #jcd.getStringRepresentation()
         Base64.encodeBase64String(
             jcd.getByteArrayRepresentation()),
         ParallelSolrIndexer.arrayToString(
@@ -124,8 +124,8 @@ def readable_values(im_paths):
         for histoval in test_edge_histogram(im):
             print histoval
         
-        #for histoval in test_PHOG(im):
-        #   print histoval
+        for histoval in test_PHOG(im):
+           print histoval
         
         for histoval in test_opponent_histogram(im):
             print histoval
@@ -155,17 +155,17 @@ def json_encoded_values(im_paths):
                 zip(list_of_names,
                     test_edge_histogram(im, silence=True))),
             
-            #phog=dict(
-            #    zip(list_of_names,
-            #       test_PHOG(im, silence=True))),
+            phog=dict(
+                zip(list_of_names,
+                   test_PHOG(im, silence=True))),
             
             opponent_histogram=dict(
                 zip(list_of_names,
                     test_opponent_histogram(im, silence=True))),
             
-            #jcd=dict(
-            #    zip(list_of_names,
-            #       test_JCD(im, silence=True))),
+            # jcd=dict(
+            #     zip(list_of_names,
+            #        test_JCD(im, silence=True))),
         ))
     
     print json.dumps(list_of_dicts, indent=4)
