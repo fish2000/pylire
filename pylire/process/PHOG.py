@@ -105,7 +105,7 @@ def vector_subphog(X, Y, W, H, grayscale, grayD):
     # print(numpy.array_repr(bindexes, max_line_width=200))
     # print("max: %s min: %s" % (numpy.max(bindexes), numpy.min(bindexes)))
     
-    return
+    #return
     
     # yo = numpy.where(numpy.floor(bindexfp) == PHOG_BINS, 0, numpy.floor(bindexfp))
     # bindexes = numpy.where(bindexfp == numpy.floor(bindexfp),
