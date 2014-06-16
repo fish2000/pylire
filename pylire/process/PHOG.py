@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 from __future__ import division
 
 from scipy.ndimage import sobel as scipy_sobel
@@ -6,8 +7,9 @@ from skimage.filter import canny as skimage_canny
 import numpy
 import math
 
-from pylire.compatibility.utils import print_array_info
+from pylire.process import external
 from pylire.process.grayscale import ITU_R_601_2
+from pylire.compatibility.utils import print_array_info
 
 CANNY_THRESHOLD_LOW = 60.0
 CANNY_THRESHOLD_HIGH = 100.0
@@ -37,6 +39,9 @@ def set_canny_pixel(x, y, grayscale, value):
     else:
         grayscale[x, y] = 255
 
+@external
+def hog(im, sbin=8):
+    return im
 
 def track_weak_ones(x, y, grayscale):
     """ Tail-recursive neighborhood-stalking function to hunt
@@ -79,7 +84,7 @@ def naive_subphog(X, Y, W, H, grayscale, grayD):
 
 def vector_subphog(X, Y, W, H, grayscale, grayD):
     #from numpy.ma import MaskedArray
-    import scipy.stats
+    #import scipy.stats
     
     subhistogram = numpy.zeros(PHOG_BINS, dtype="double")
     subphog = grayscale[X:(X+W), Y:(Y+H)] < 50
