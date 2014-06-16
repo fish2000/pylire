@@ -7,7 +7,10 @@ cdef extern from "math.h":
     double fabs(double i)
     double floor(double i)
 
-cpdef hog(im, int sbin=8):
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.cdivision(True)
+def hog(im, int sbin=8):
     """
     Computes a histogram of oriented gradient features.
 
@@ -44,7 +47,9 @@ cpdef hog(im, int sbin=8):
     cdef int x, y, o, q
     cdef int dstptr, srcptr
 
-    width, height = im.size
+    #width, height = im.size
+    width = im.shape[0]
+    height = im.shape[1]
     blocks0 = height / sbin 
     blocks1 = width / sbin
 
@@ -175,7 +180,7 @@ cpdef hog(im, int sbin=8):
     
     return feat
 
-cpdef hogpad(numpy.ndarray[numpy.double_t, ndim=3] hog):
+def hogpad(numpy.ndarray[numpy.double_t, ndim=3] hog):
     cdef numpy.ndarray[numpy.double_t, ndim=3] out
     cdef int i, j, k
     cdef int w = hog.shape[0], h = hog.shape[1], z = hog.shape[2]
@@ -187,7 +192,7 @@ cpdef hogpad(numpy.ndarray[numpy.double_t, ndim=3] hog):
                 out[i+1, j+1, k] = hog[i, j, k]
     return out
 
-cpdef rgbhist(im, int binsize=8):
+def rgbhist(im, int binsize=8):
     """
     Computes an RGB color histogram with a binsize.
     """
@@ -204,7 +209,7 @@ cpdef rgbhist(im, int binsize=8):
             hist[bin] += 1
     return hist
 
-cpdef rgbmean(im):
+def rgbmean(im):
     """
     Computes mean and covariances of RGB colors.
     """

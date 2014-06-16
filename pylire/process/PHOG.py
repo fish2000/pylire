@@ -41,6 +41,7 @@ def set_canny_pixel(x, y, grayscale, value):
 
 @external
 def hog(im, sbin=8):
+    print "PYTHON HOGGGG()!!!"
     return im
 
 def track_weak_ones(x, y, grayscale):
@@ -266,8 +267,19 @@ def main(pth):
     from pylire.process.channels import RGB
     from imread import imread
     
-    (R, G, B) = RGB(imread(pth))
+    im = imread(pth)
+    (R, G, B) = RGB(im)
     
+    @timecheck
+    def timetest_cythonized_HOG(ndim):
+        hogg = hog(ndim)
+        print("Cythonized HOG() function:")
+        print_array_info(hogg)
+        print("")
+    
+    timetest_cythonized_HOG(im)
+    
+    '''
     @timecheck
     def timetest_naive_PHOG(R, G, B):
         phog = PHOG(R, G, B)
@@ -275,11 +287,11 @@ def main(pth):
         print_array_info(phog)
         print("")
     
-    timetest_naive_PHOG(R, G, B)
+    timetest_naive_PHOG(R, G, B)'''
 
 if __name__ == '__main__':
     
-    import sys
+    #import sys
     from os import listdir
     from os.path import expanduser, basename, join
     
@@ -296,6 +308,6 @@ if __name__ == '__main__':
         print("")
         print("IMAGE: %s" % basename(im_pth))
         main(im_pth)
-        sys.exit(0)
+        #sys.exit(0)
 
 
