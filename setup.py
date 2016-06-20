@@ -7,22 +7,6 @@ except ImportError:
     use_setuptools()
     from setuptools import setup, Extension
 
-def cython_module(*args):
-    ext_package = ".".join(args)
-    ext_pth = "/".join(args) + ".pyx"
-    return Extension(ext_package, [ext_pth],
-        extra_compile_args=["-Wno-unused-function"])
-
-def cython_ext(name):
-    return cython_module('pylire', 'process', 'ext', name)
-
-def console_script(command_name, module_pth, func_name='main', command_prefix='pylire'):
-    if not command_prefix:
-        raise ValueError(
-            "console_script() requires a non-False-y command_prefix argument")
-    return "%s-%s = %s:%s" % (
-        command_prefix, command_name, module_pth, func_name)
-
 from Cython.Distutils import build_ext
 from distutils.sysconfig import get_python_inc
 
@@ -33,6 +17,34 @@ except ImportError:
         def get_include(self):
             return "."
     numpy = FakeNumpy()
+
+include_dirs = [
+    numpy.get_include(),
+    get_python_inc(plat_specific=1)
+]
+
+define_macros = []
+define_macros.append(
+    ('NPY_NO_DEPRECATED_API', 'NPY_1_7_API_VERSION'))
+define_macros.append(
+    ('PY_ARRAY_UNIQUE_SYMBOL', 'PyLIRE_YO_DOGG'))
+
+def cython_module(*args):
+    ext_package = ".".join(args)
+    ext_pth = "/".join(args) + ".pyx"
+    return Extension(ext_package, [ext_pth],
+        extra_compile_args=["-Wno-unused-function"],
+        include_dirs=include_dirs)
+
+def cython_ext(name):
+    return cython_module('pylire', 'process', 'ext', name)
+
+def console_script(command_name, module_pth, func_name='main', command_prefix='pylire'):
+    if not command_prefix:
+        raise ValueError(
+            "console_script() requires a non-False-y command_prefix argument")
+    return "%s-%s = %s:%s" % (
+        command_prefix, command_name, module_pth, func_name)
 
 setup(
     name='pylire',
@@ -84,9 +96,7 @@ setup(
         cython_ext("PHOG")],
     
     cmdclass=dict(build_ext=build_ext),
-    include_dirs=[
-        numpy.get_include(),
-        get_python_inc(plat_specific=1)],
+    include_dirs=include_dirs,
     
     classifiers=[
         'Development Status :: 4 - Beta',
